@@ -612,7 +612,8 @@ This project is licensed under the MIT License - see the LICENSE file for detail
 
 ## 👥 Contributors
 
-PES Final Project Team - 2024/2025
+PES Final Project Team - 2025
+IEEE SUP'COM Student Branch
 
 ## 🙏 Acknowledgments
 

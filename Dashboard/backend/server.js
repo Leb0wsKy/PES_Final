@@ -24,10 +24,15 @@ const CHATBOT_API = 'http://localhost:5003';
 
 // Import routes
 const authRoutes = require('./routes/auth');
+const dataRoutes = require('./routes/data');
 
 // ==================== Authentication Routes ====================
 
 app.use('/api/auth', authRoutes);
+
+// ==================== Data Routes (MongoDB) ====================
+
+app.use('/api/data', dataRoutes);
 
 // ==================== Health Check ====================
 
@@ -301,14 +306,16 @@ app.get('/api/analytics/summary', async (req, res) => {
 });
 
 // ==================== Serve React Frontend ====================
+// Note: Frontend runs separately on port 3000 in development
+// Uncomment below lines for production (single port deployment)
 
 // Serve static files from React build
-app.use(express.static(path.join(__dirname, '../frontend/build')));
+// app.use(express.static(path.join(__dirname, '../frontend/build')));
 
 // All other routes should serve the React app
-app.get('*', (req, res) => {
-  res.sendFile(path.join(__dirname, '../frontend/build', 'index.html'));
-});
+// app.get('*', (req, res) => {
+//   res.sendFile(path.join(__dirname, '../frontend/build', 'index.html'));
+// });
 
 // ==================== Error Handling ====================
 

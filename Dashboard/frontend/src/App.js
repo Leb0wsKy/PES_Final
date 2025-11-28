@@ -450,10 +450,10 @@ function DashboardContent() {
           }
         }}>
         <Toolbar sx={{ py: 2, minHeight: '80px !important' }}>
+          {/* Left: Logo and Title */}
           <Box sx={{ 
             display: 'flex', 
             alignItems: 'center', 
-            flexGrow: 1,
             gap: 2
           }}>
             <Box sx={{
@@ -509,6 +509,57 @@ function DashboardContent() {
               </Typography>
             </Box>
           </Box>
+
+          {/* Center: Navigation Tabs */}
+          <Box sx={{ flexGrow: 1, display: 'flex', justifyContent: 'center', px: 2 }}>
+            <Tabs
+              value={selectedTab}
+              onChange={handleTabChange}
+              textColor="inherit"
+              TabIndicatorProps={{
+                style: {
+                  backgroundColor: mode === 'dark' ? '#4ade80' : '#10b981',
+                  height: 3,
+                  borderRadius: '3px 3px 0 0'
+                }
+              }}
+              sx={{ 
+                minHeight: 48,
+                '& .MuiTab-root': {
+                  color: mode === 'dark' ? 'rgba(241, 245, 249, 0.7)' : 'rgba(15, 23, 42, 0.7)',
+                  fontWeight: 600,
+                  fontSize: '0.95rem',
+                  minHeight: 48,
+                  transition: 'all 0.3s ease',
+                  '&:hover': {
+                    color: mode === 'dark' ? '#4ade80' : '#10b981',
+                    transform: 'translateY(-2px)'
+                  },
+                  '&.Mui-selected': {
+                    color: mode === 'dark' ? '#4ade80' : '#10b981'
+                  }
+                }
+              }}
+            >
+              <Tab 
+                icon={<DashboardIcon />} 
+                label="Overview" 
+                iconPosition="start"
+              />
+              <Tab 
+                icon={<ElectricBolt />} 
+                label="NILM" 
+                iconPosition="start"
+              />
+              <Tab 
+                icon={<SolarPower />} 
+                label="PV Monitoring" 
+                iconPosition="start"
+              />
+            </Tabs>
+          </Box>
+
+          {/* Right: Health Status and User Menu */}
           <Box sx={{
             display: 'flex',
             alignItems: 'center',
@@ -621,40 +672,6 @@ function DashboardContent() {
             </Menu>
           </Box>
         </Toolbar>
-        <Tabs
-          value={selectedTab}
-          onChange={handleTabChange}
-          textColor="inherit"
-          centered
-          TabIndicatorProps={{
-            style: {
-              backgroundColor: mode === 'dark' ? '#4ade80' : '#10b981',
-              height: 3,
-              borderRadius: '3px 3px 0 0'
-            }
-          }}
-          sx={{ 
-            bgcolor: mode === 'dark' ? 'rgba(15, 23, 42, 0.6)' : 'rgba(241, 245, 249, 0.6)',
-            borderTop: mode === 'dark' ? '1px solid rgba(74, 222, 128, 0.1)' : '1px solid rgba(16, 185, 129, 0.1)',
-            '& .MuiTab-root': {
-              color: mode === 'dark' ? 'rgba(241, 245, 249, 0.7)' : 'rgba(15, 23, 42, 0.7)',
-              fontWeight: 600,
-              fontSize: '0.95rem',
-              transition: 'all 0.3s ease',
-              '&:hover': {
-                color: mode === 'dark' ? '#4ade80' : '#10b981',
-                transform: 'translateY(-2px)'
-              },
-              '&.Mui-selected': {
-                color: mode === 'dark' ? '#4ade80' : '#10b981'
-              }
-            }
-          }}
-        >
-          <Tab icon={<DashboardIcon />} label="Overview" />
-          <Tab icon={<ElectricBolt />} label="NILM - Load Disaggregation" />
-          <Tab icon={<SolarPower />} label="PV - Fault Detection" />
-        </Tabs>
       </AppBar>
 
       <Container maxWidth="xl" sx={{ mt: 4, mb: 4, position: 'relative', zIndex: 10 }}>
@@ -691,7 +708,7 @@ function DashboardContent() {
           color: 'text.secondary',
           fontWeight: 500
         }}>
-          PowerPulse © 2024 - Advanced Energy Monitoring & Fault Detection Platform
+          PowerPulse © 2025 - Advanced Energy Monitoring & Fault Detection Platform
         </Typography>
       </Box>
 

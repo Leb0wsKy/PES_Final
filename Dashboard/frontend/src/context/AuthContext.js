@@ -29,7 +29,7 @@ export const AuthProvider = ({ children }) => {
   // Load user from token
   const loadUser = async () => {
     try {
-      const response = await axios.get('http://localhost:3001/api/auth/me');
+      const response = await axios.get('/api/auth/me');
       setUser(response.data.user);
     } catch (error) {
       console.error('Load user error:', error);
@@ -42,7 +42,7 @@ export const AuthProvider = ({ children }) => {
   // Login function
   const login = async (email, password) => {
     try {
-      const response = await axios.post('http://localhost:3001/api/auth/login', {
+      const response = await axios.post('/api/auth/login', {
         email,
         password
       });
@@ -63,7 +63,7 @@ export const AuthProvider = ({ children }) => {
   // Signup function
   const signup = async (name, email, password) => {
     try {
-      const response = await axios.post('http://localhost:3001/api/auth/signup', {
+      const response = await axios.post('/api/auth/signup', {
         name,
         email,
         password

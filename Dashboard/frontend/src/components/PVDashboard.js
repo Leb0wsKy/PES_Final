@@ -76,13 +76,40 @@ const PVDashboard = () => {
 
   const loadMockData = async () => {
     try {
-      const response = await fetch('/api/pv/mock-data?hours=24');
-      const data = await response.json();
-      setMockData(data.data);
-      setRealTimeData(data.data.slice(-60)); // Last 60 minutes
+      // Fetch PV data records from MongoDB
+      const response = await fetch('/api/data/pv?limit=60&sort=-1');
+      
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+      
+      const result = await response.json();
+      console.log('PV data received:', result); // Debug log
+      
+      if (result.success && result.data && result.data.length > 0) {
+        // Map database fields to expected format
+        const records = result.data.map(record => ({
+          timestamp: record.timestamp,
+          Irradiance: record.Irradiance || record.Gt,
+          Temperature: record.Temperature || record.T2m,
+          'Current(A)': 30 + Math.random() * 10, // Simulated - not in CSV
+          'Power(W)': record.P || 18000 + Math.random() * 2000,
+          'Voltage(V)': 600 + Math.random() * 50, // Simulated - not in CSV
+          'LoadCurrent(A)': 28 + Math.random() * 8, // Simulated - not in CSV
+          'LoadPower(W)': (record.P || 17100) * 0.95, // Simulated - not in CSV
+          'LoadVoltage(V)': 588 + Math.random() * 40 // Simulated - not in CSV
+        }));
+        
+        console.log('First PV record:', records[0]); // Debug log
+        setMockData(records);
+        setRealTimeData(records);
+        setError(null); // Clear any previous errors
+      } else {
+        throw new Error('No data received from database');
+      }
     } catch (err) {
-      setError('Failed to load mock data');
-      console.error(err);
+      console.error('Error loading PV data:', err);
+      setError(`Failed to load data: ${err.message}`);
     }
   };
 
