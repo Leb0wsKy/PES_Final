@@ -29,12 +29,14 @@ import {
   DarkMode
 } from '@mui/icons-material';
 import { AuthProvider, useAuth } from './context/AuthContext';
+import { DashboardProvider } from './context/DashboardContext';
 import Login from './components/Login';
 import Signup from './components/Signup';
 import PrivateRoute from './components/PrivateRoute';
 import NILMDashboard from './components/NILMDashboard';
 import PVDashboard from './components/PVDashboard';
 import OverviewDashboard from './components/OverviewDashboard';
+import ChatbotAssistant from './components/ChatbotAssistant';
 import './App.css';
 
 function DashboardContent() {
@@ -474,15 +476,14 @@ function DashboardContent() {
                 '50%': { transform: 'scale(1.05)', boxShadow: mode === 'dark' ? '0 0 30px rgba(74, 222, 128, 0.4)' : '0 0 30px rgba(16, 185, 129, 0.3)' }
               }
             }}>
-              <ElectricBolt sx={{ 
-                fontSize: 32,
-                color: 'primary.main',
-                filter: mode === 'dark' 
-                  ? 'drop-shadow(0 2px 8px rgba(74, 222, 128, 0.4))'
-                  : 'drop-shadow(0 2px 8px rgba(16, 185, 129, 0.4))'
-              }} />
+              <Box
+                component="img"
+                src="/logo.png"
+                alt="PowerPulse Logo"
+                sx={{ width: 40, height: 40, objectFit: 'contain' }}
+              />
             </Box>
-            <Box>
+            <Box sx={{ display: { xs: 'none', sm: 'block' } }}>
               <Typography variant="h5" component="div" sx={{ 
                 fontWeight: 800,
                 background: mode === 'dark'
@@ -693,6 +694,10 @@ function DashboardContent() {
           PowerPulse © 2024 - Advanced Energy Monitoring & Fault Detection Platform
         </Typography>
       </Box>
+
+      {/* Chatbot Assistant */}
+      <ChatbotAssistant />
+      
       </Box>
     </ThemeProvider>
   );
@@ -702,18 +707,20 @@ function App() {
   return (
     <Router>
       <AuthProvider>
-        <Routes>
-          <Route path="/login" element={<Login />} />
-          <Route path="/signup" element={<Signup />} />
-          <Route
-            path="/*"
-            element={
-              <PrivateRoute>
-                <DashboardContent />
-              </PrivateRoute>
-            }
-          />
-        </Routes>
+        <DashboardProvider>
+          <Routes>
+            <Route path="/login" element={<Login />} />
+            <Route path="/signup" element={<Signup />} />
+            <Route
+              path="/*"
+              element={
+                <PrivateRoute>
+                  <DashboardContent />
+                </PrivateRoute>
+              }
+            />
+          </Routes>
+        </DashboardProvider>
       </AuthProvider>
     </Router>
   );

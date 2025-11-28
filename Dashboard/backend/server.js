@@ -20,6 +20,7 @@ app.use(morgan('dev'));
 // Flask API endpoints
 const NILM_API = 'http://localhost:5001';
 const PV_API = 'http://localhost:5002';
+const CHATBOT_API = 'http://localhost:5003';
 
 // Import routes
 const authRoutes = require('./routes/auth');
@@ -34,13 +35,15 @@ app.get('/api/health', async (req, res) => {
   try {
     const nilmHealth = await axios.get(`${NILM_API}/health`).catch(() => ({ data: { status: 'offline' } }));
     const pvHealth = await axios.get(`${PV_API}/health`).catch(() => ({ data: { status: 'offline' } }));
+    const chatbotHealth = await axios.get(`${CHATBOT_API}/health`).catch(() => ({ data: { status: 'offline' } }));
 
     res.json({
       status: 'healthy',
       timestamp: new Date().toISOString(),
       services: {
         nilm: nilmHealth.data,
-        pv: pvHealth.data
+        pv: pvHealth.data,
+        chatbot: chatbotHealth.data
       }
     });
   } catch (error) {
@@ -121,6 +124,41 @@ app.get('/api/pv/models', async (req, res) => {
 app.post('/api/pv/theoretical', async (req, res) => {
   try {
     const response = await axios.post(`${PV_API}/calculate_theoretical`, req.body);
+    res.json(response.data);
+  } catch (error) {
+    res.status(error.response?.status || 500).json({
+      error: error.response?.data?.error || error.message
+    });
+  }
+});
+
+// ==================== Chatbot Endpoints ====================
+
+app.post('/api/chatbot/chat', async (req, res) => {
+  try {
+    const response = await axios.post(`${CHATBOT_API}/chat`, req.body);
+    res.json(response.data);
+  } catch (error) {
+    res.status(error.response?.status || 500).json({
+      error: error.response?.data?.error || error.message
+    });
+  }
+});
+
+app.post('/api/chatbot/clear', async (req, res) => {
+  try {
+    const response = await axios.post(`${CHATBOT_API}/clear`, req.body);
+    res.json(response.data);
+  } catch (error) {
+    res.status(error.response?.status || 500).json({
+      error: error.response?.data?.error || error.message
+    });
+  }
+});
+
+app.get('/api/chatbot/suggest', async (req, res) => {
+  try {
+    const response = await axios.get(`${CHATBOT_API}/suggest`);
     res.json(response.data);
   } catch (error) {
     res.status(error.response?.status || 500).json({
@@ -264,8 +302,13 @@ app.get('/api/analytics/summary', async (req, res) => {
 
 // ==================== Serve React Frontend ====================
 
-// Note: Frontend is served separately on port 3000 during development
-// In production, build files would be served from here
+// Serve static files from React build
+app.use(express.static(path.join(__dirname, '../frontend/build')));
+
+// All other routes should serve the React app
+app.get('*', (req, res) => {
+  res.sendFile(path.join(__dirname, '../frontend/build', 'index.html'));
+});
 
 // ==================== Error Handling ====================
 

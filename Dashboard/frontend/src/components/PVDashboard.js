@@ -29,6 +29,7 @@ import {
   AreaChart
 } from 'recharts';
 import { Refresh, Warning, CheckCircle } from '@mui/icons-material';
+import { useDashboard } from '../context/DashboardContext';
 
 const FAULT_COLORS = {
   'Normal': '#4CAF50',
@@ -38,6 +39,7 @@ const FAULT_COLORS = {
 };
 
 const PVDashboard = () => {
+  const { setPvData } = useDashboard();
   const [selectedModel, setSelectedModel] = useState('lightgbm');
   const [mockData, setMockData] = useState([]);
   const [predictions, setPredictions] = useState(null);
@@ -105,6 +107,14 @@ const PVDashboard = () => {
 
       const result = await response.json();
       setPredictions(result);
+      
+      // Update dashboard context for chatbot
+      setPvData({
+        predictions: result.predictions,
+        inputs: mockData[0],
+        model: selectedModel,
+        timestamp: new Date().toISOString()
+      });
 
       // Update real-time data with predictions
       const updatedData = mockData.map((item, idx) => {
@@ -170,7 +180,8 @@ const PVDashboard = () => {
       currentTemp: latest.Temperature.toFixed(2),
       faultCounts,
       latestFault: latest.predictedFault || latest.actualFault || 'Unknown',
-      confidence: latest.confidence ? (latest.confidence * 100).toFixed(1) : 'N/A'
+      confidence: latest.confidence ? (latest.confidence * 100).toFixed(1) : null,
+      hasPrediction: !!latest.confidence
     };
   };
 
@@ -254,7 +265,7 @@ const PVDashboard = () => {
           <Grid item xs={12}>
             <Grid container spacing={2}>
               <Grid item xs={12} md={3}>
-                <Card>
+                <Card sx={{ height: '100%', minHeight: 140 }}>
                   <CardContent>
                     <Typography color="textSecondary" gutterBottom>
                       Current Power
@@ -266,7 +277,7 @@ const PVDashboard = () => {
                 </Card>
               </Grid>
               <Grid item xs={12} md={3}>
-                <Card>
+                <Card sx={{ height: '100%', minHeight: 140 }}>
                   <CardContent>
                     <Typography color="textSecondary" gutterBottom>
                       Irradiance
@@ -278,7 +289,7 @@ const PVDashboard = () => {
                 </Card>
               </Grid>
               <Grid item xs={12} md={3}>
-                <Card>
+                <Card sx={{ height: '100%', minHeight: 140 }}>
                   <CardContent>
                     <Typography color="textSecondary" gutterBottom>
                       Temperature
@@ -290,7 +301,7 @@ const PVDashboard = () => {
                 </Card>
               </Grid>
               <Grid item xs={12} md={3}>
-                <Card sx={{ bgcolor: FAULT_COLORS[stats.latestFault] + '20' }}>
+                <Card sx={{ bgcolor: FAULT_COLORS[stats.latestFault] + '20', height: '100%', minHeight: 140 }}>
                   <CardContent>
                     <Typography color="textSecondary" gutterBottom>
                       System Status
@@ -298,12 +309,22 @@ const PVDashboard = () => {
                     <Typography variant="h6">
                       {stats.latestFault}
                     </Typography>
-                    <Chip
-                      label={`${stats.confidence}% confidence`}
-                      size="small"
-                      sx={{ mt: 1 }}
-                      icon={stats.latestFault === 'Normal' ? <CheckCircle /> : <Warning />}
-                    />
+                    {stats.hasPrediction ? (
+                      <Chip
+                        label={`${stats.confidence}% confidence`}
+                        size="small"
+                        sx={{ mt: 1 }}
+                        icon={stats.latestFault === 'Normal' ? <CheckCircle /> : <Warning />}
+                      />
+                    ) : (
+                      <Chip
+                        label="Run prediction"
+                        size="small"
+                        sx={{ mt: 1 }}
+                        color="default"
+                        variant="outlined"
+                      />
+                    )}
                   </CardContent>
                 </Card>
               </Grid>
@@ -442,14 +463,19 @@ const PVDashboard = () => {
                   Fault Probabilities:
                 </Typography>
                 {Object.entries(singlePrediction.probabilities).map(([fault, prob]) => (
-                  <Box key={fault} sx={{ mb: 1 }}>
-                    <Typography variant="body2">
-                      {fault}: {(prob * 100).toFixed(2)}%
-                    </Typography>
+                  <Box key={fault} sx={{ mb: 1.5 }}>
+                    <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 0.5 }}>
+                      <Typography variant="body2" fontWeight={500}>
+                        {fault}
+                      </Typography>
+                      <Typography variant="body2" fontWeight={600}>
+                        {(prob * 100).toFixed(2)}%
+                      </Typography>
+                    </Box>
                     <Box
                       sx={{
                         width: '100%',
-                        height: 8,
+                        height: 10,
                         bgcolor: '#e0e0e0',
                         borderRadius: 1,
                         overflow: 'hidden'
@@ -459,7 +485,8 @@ const PVDashboard = () => {
                         sx={{
                           width: `${prob * 100}%`,
                           height: '100%',
-                          bgcolor: FAULT_COLORS[fault]
+                          bgcolor: FAULT_COLORS[fault] || '#2196f3',
+                          transition: 'width 0.3s ease'
                         }}
                       />
                     </Box>

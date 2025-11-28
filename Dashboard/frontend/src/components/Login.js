@@ -226,7 +226,12 @@ const Login = () => {
           }}
         >
           <Box sx={{ textAlign: 'center', mb: 3 }}>
-            <LoginIcon sx={{ fontSize: 60, color: 'primary.main', mb: 2 }} />
+            <Box
+              component="img"
+              src="/logo.png"
+              alt="PowerPulse Logo"
+              sx={{ width: 120, height: 120, mb: 2, objectFit: 'contain' }}
+            />
             <Typography variant="h4" fontWeight="bold" gutterBottom>
               Welcome Back
             </Typography>

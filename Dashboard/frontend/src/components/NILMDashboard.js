@@ -26,6 +26,7 @@ import {
   Cell
 } from 'recharts';
 import { Refresh } from '@mui/icons-material';
+import { useDashboard } from '../context/DashboardContext';
 
 const APPLIANCE_COLORS = {
   EVSE: '#FF6384',
@@ -36,6 +37,7 @@ const APPLIANCE_COLORS = {
 };
 
 const NILMDashboard = () => {
+  const { setNilmData } = useDashboard();
   const [selectedModel, setSelectedModel] = useState('atcn');
   const [mockData, setMockData] = useState([]);
   const [predictions, setPredictions] = useState(null);
@@ -98,6 +100,14 @@ const NILMDashboard = () => {
 
       const result = await response.json();
       setPredictions(result);
+      
+      // Update dashboard context for chatbot
+      setNilmData({
+        predictions: result.predictions,
+        aggregate_power: aggregatePower.slice(-1)[0],
+        model: selectedModel,
+        timestamp: new Date().toISOString()
+      });
 
       // Update real-time data with predictions
       const updatedData = mockData.map((item, idx) => {
@@ -216,32 +226,50 @@ const NILMDashboard = () => {
         {stats && (
           <Grid item xs={12}>
             <Grid container spacing={2}>
-              <Grid item xs={12} md={2.4}>
-                <Card>
-                  <CardContent>
-                    <Typography color="textSecondary" gutterBottom>
+              <Grid item xs={12} sm={6} md={12/6}>
+                <Card sx={{ height: '100%' }}>
+                  <CardContent sx={{ 
+                    display: 'flex', 
+                    flexDirection: 'column', 
+                    justifyContent: 'space-between',
+                    height: '100%',
+                    minHeight: 140
+                  }}>
+                    <Typography color="textSecondary" gutterBottom variant="body2" fontWeight={600}>
                       Total Power
                     </Typography>
-                    <Typography variant="h5">
+                    <Typography variant="h5" fontWeight={700} sx={{ my: 1 }}>
                       {stats.totalPower} W
                     </Typography>
                   </CardContent>
                 </Card>
               </Grid>
               {stats.appliances.map((app) => (
-                <Grid item xs={12} md={2.4} key={app.name}>
-                  <Card sx={{ bgcolor: APPLIANCE_COLORS[app.name] + '20' }}>
-                    <CardContent>
-                      <Typography color="textSecondary" gutterBottom>
+                <Grid item xs={12} sm={6} md={12/6} key={app.name}>
+                  <Card sx={{ 
+                    bgcolor: APPLIANCE_COLORS[app.name] + '20',
+                    height: '100%'
+                  }}>
+                    <CardContent sx={{ 
+                      display: 'flex', 
+                      flexDirection: 'column', 
+                      justifyContent: 'space-between',
+                      height: '100%',
+                      minHeight: 140
+                    }}>
+                      <Typography color="textSecondary" gutterBottom variant="body2" fontWeight={600}>
                         {app.name}
                       </Typography>
-                      <Typography variant="h6">
+                      <Typography variant="h5" fontWeight={700} sx={{ my: 1 }}>
                         {app.value} W
                       </Typography>
                       <Chip
                         label={`${app.percentage}%`}
                         size="small"
-                        sx={{ mt: 1 }}
+                        sx={{ 
+                          fontWeight: 600,
+                          alignSelf: 'flex-start'
+                        }}
                       />
                     </CardContent>
                   </Card>
