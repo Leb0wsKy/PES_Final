@@ -1,0 +1,11 @@
+config load "C:\Users\chate\Desktop\MATLAB Simulink Model of Photovoltaic Cell, Panel and Array\PIL\PIL.ioc"
+project toolchain STM32CubeIDE
+
+SetStructure Advanced
+
+project setCustomFWPath "C:\Users\chate\STM32Cube\Repository\STM32Cube_FW_F4_V1.26.2"
+
+config saveas C:\Users\chate\Desktop\MATLAB Simulink Model of Photovoltaic Cell, Panel and Array\PIL\PIL.ioc
+
+
+exit wait
