@@ -26,8 +26,6 @@ pip-delete-this-directory.txt
 # Datasets - All data folders
 SIDED/
 **/SIDED/
-NILM_SIDED-master/
-**/NILM_SIDED-master/
 **/DataforNILMTK/
 **/Dealer/
 **/Logistic/
