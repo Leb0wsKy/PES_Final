@@ -47,7 +47,22 @@ const APPLIANCE_COLORS = {
 
 const NILMDashboard = () => {
   const { setNilmData } = useDashboard();
-  const WINDOW_SIZE = 288; // minimum points required for model prediction
+  const WINDOW_SIZE = 288; // target number of points for model prediction
+  const [fullRangeData, setFullRangeData] = useState([]); // full user-selected range
+  const [wasSampled, setWasSampled] = useState(false); // indicates downsampling occurred
+
+  // Downsample to exactly WINDOW_SIZE evenly spaced points (inclusive endpoints)
+  const sampleWindow = (data, target = WINDOW_SIZE) => {
+    if (!data || data.length === 0) return [];
+    if (data.length <= target) return data.slice();
+    const n = data.length;
+    const sampled = [];
+    for (let i = 0; i < target; i++) {
+      const idx = Math.round(i * (n - 1) / (target - 1));
+      sampled.push(data[idx]);
+    }
+    return sampled;
+  };
   const [selectedModel, setSelectedModel] = useState('atcn');
   const [selectedBuilding, setSelectedBuilding] = useState('Office');
   const [selectedLocation, setSelectedLocation] = useState('LA');
@@ -118,13 +133,16 @@ const NILMDashboard = () => {
     const endTs = new Date(dateRange.end).getTime();
     try {
       setLoading(true);
-      const url = `/api/data/nilm?sort=1&building=${selectedBuilding}&location=${selectedLocation}&startTime=${startTs}&endTime=${endTs}`;
+      const url = `/api/data/nilm?limit=0&sort=1&building=${selectedBuilding}&location=${selectedLocation}&startTime=${startTs}&endTime=${endTs}`;
       const resp = await fetch(url);
       if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
       const json = await resp.json();
       const chronologicalData = json.data; // already sort=1 ascending
       setMockData(chronologicalData);
-      setRealTimeData(chronologicalData);
+      setFullRangeData(chronologicalData);
+      const sampled = sampleWindow(chronologicalData);
+      setRealTimeData(sampled);
+      setWasSampled(chronologicalData.length > WINDOW_SIZE);
       setError(null);
     } catch (err) {
       console.error('Error applying date range:', err);
@@ -151,7 +169,7 @@ const NILMDashboard = () => {
       const startTs = endTs - 6 * 60 * 60 * 1000;
 
       // 3) Fetch NILM data within that window in chronological order
-      const dataUrl = `/api/data/nilm?sort=1&building=${selectedBuilding}&location=${selectedLocation}&startTime=${startTs}&endTime=${endTs}`;
+      const dataUrl = `/api/data/nilm?limit=0&sort=1&building=${selectedBuilding}&location=${selectedLocation}&startTime=${startTs}&endTime=${endTs}`;
       console.log('Fetching NILM data:', dataUrl);
       const dataResp = await fetch(dataUrl);
       if (!dataResp.ok) throw new Error(`HTTP error! status: ${dataResp.status}`);
@@ -159,7 +177,10 @@ const NILMDashboard = () => {
 
       const chronologicalData = result.data || [];
       setMockData(chronologicalData);
-      setRealTimeData(chronologicalData);
+      setFullRangeData(chronologicalData);
+      const sampled = sampleWindow(chronologicalData);
+      setRealTimeData(sampled);
+      setWasSampled(chronologicalData.length > WINDOW_SIZE);
 
       // Set default date range picker values to last 6 hours
       setDateRange({
@@ -182,13 +203,13 @@ const NILMDashboard = () => {
 
     try {
       // Validate sufficient data points
-      if (!mockData || mockData.length < WINDOW_SIZE) {
+      if (!realTimeData || realTimeData.length < WINDOW_SIZE) {
         setLoading(false);
-        setError(`Need at least ${WINDOW_SIZE} data points for prediction. Currently have ${mockData.length}. Please expand the time range.`);
+        setError(`Need at least ${WINDOW_SIZE} data points for prediction. Currently have ${realTimeData.length}. Please expand the time range.`);
         return;
       }
       // Get aggregate power values
-      const aggregatePower = mockData.map(d => d.aggregate);
+      const aggregatePower = realTimeData.map(d => d.aggregate);
       
       console.log('Running prediction with:', {
         model: selectedModel,
@@ -227,7 +248,7 @@ const NILMDashboard = () => {
       });
 
       // Update real-time data with predictions
-      const updatedData = mockData.map((item, idx) => {
+      const updatedData = realTimeData.map((item, idx) => {
         const pred = result.predictions.find(p => p.index === idx);
         if (pred) {
           return {
@@ -238,14 +259,8 @@ const NILMDashboard = () => {
         return item;
       });
 
-      // Update real-time display data to last 6 hours
-      const endTs = new Date(updatedData[updatedData.length - 1].timestamp).getTime();
-      const startTs = endTs - 6 * 60 * 60 * 1000;
-      const lastSixHours = updatedData.filter(d => {
-        const t = new Date(d.timestamp).getTime();
-        return t >= startTs && t <= endTs;
-      });
-      setRealTimeData(lastSixHours);
+      // Preserve current selected range after prediction
+      setRealTimeData(updatedData);
       setLoading(false);
     } catch (err) {
       setError(err.message);
@@ -280,23 +295,53 @@ const NILMDashboard = () => {
 
   const stats = calculateStats();
 
-  // Prepare chart data - use predicted values if available
-  const chartData = realTimeData.map((item, idx) => {
+  // Prepare chart data - numeric values for dynamic scaling
+  const chartData = realTimeData.map((item) => {
     const applianceData = item.predicted || item.appliances;
     const date = new Date(item.timestamp);
-    const hours = date.getHours().toString().padStart(2, '0');
-    const minutes = date.getMinutes().toString().padStart(2, '0');
-    
     return {
-      time: `${hours}:${minutes}`,
-      aggregate: (item.aggregate / 1000).toFixed(2), // Convert to kW
-      EVSE: (applianceData.EVSE / 1000).toFixed(2),
-      PV: (applianceData.PV / 1000).toFixed(2),
-      CS: (applianceData.CS / 1000).toFixed(2),
-      CHP: (applianceData.CHP / 1000).toFixed(2),
-      BA: (applianceData.BA / 1000).toFixed(2)
+      timestamp: date.getTime(),
+      aggregate: +(item.aggregate / 1000).toFixed(2),
+      EVSE: +(applianceData.EVSE / 1000).toFixed(2),
+      PV: +(applianceData.PV / 1000).toFixed(2),
+      CS: +(applianceData.CS / 1000).toFixed(2),
+      CHP: +(applianceData.CHP / 1000).toFixed(2),
+      BA: +(applianceData.BA / 1000).toFixed(2)
     };
   });
+
+  // Dynamic axis calculations
+  const xMin = chartData.length ? chartData[0].timestamp : 0;
+  const xMax = chartData.length ? chartData[chartData.length - 1].timestamp : 0;
+  const timeSpanMs = xMax - xMin;
+  const timeSpanHours = timeSpanMs > 0 ? timeSpanMs / 3600000 : 0;
+
+  function timeTickFormatter(ts) {
+    const d = new Date(ts);
+    if (timeSpanHours > 48) {
+      return `${d.getDate()}/${d.getMonth() + 1}`; // DD/M
+    } else if (timeSpanHours > 24) {
+      return `${d.getDate()}/${d.getMonth() + 1} ${d.getHours()}:00`;
+    } else {
+      return `${d.getHours().toString().padStart(2, '0')}:${d.getMinutes().toString().padStart(2, '0')}`;
+    }
+  }
+
+  // Gather Y values across all series for domain
+  const yValues = chartData.flatMap(d => [d.aggregate, d.EVSE, d.PV, d.CS, d.CHP, d.BA]);
+  let yMin = yValues.length ? Math.min(...yValues) : 0;
+  let yMax = yValues.length ? Math.max(...yValues) : 0;
+  if (yMin === yMax) {
+    yMin = yMin - 1;
+    yMax = yMax + 1;
+  }
+  const yPadding = (yMax - yMin) * 0.05;
+  const yDomainMin = yMin - yPadding;
+  const yDomainMax = yMax + yPadding;
+
+  const rangeLabel = timeSpanHours >= 24
+    ? `${Math.floor(timeSpanHours / 24)}d ${Math.round(timeSpanHours % 24)}h`
+    : `${Math.max(1, Math.round(timeSpanHours))}h`;
 
   const pieData = stats?.appliances.map(app => ({
     name: app.name,
@@ -426,7 +471,7 @@ const NILMDashboard = () => {
               <Typography variant="body2" color="textSecondary">
                 <strong>{selectedBuilding}</strong> in <strong>{selectedLocation === 'LA' ? 'Los Angeles' : selectedLocation}</strong> | 
                 Model: <strong>{selectedModel.toUpperCase()}</strong> | 
-                Data Points: <strong>{mockData.length}</strong>
+                Range Points: <strong>{fullRangeData.length}</strong>{wasSampled ? <> → Sampled: <strong>{realTimeData.length}</strong></> : ''}
               </Typography>
             </Box>
           </Paper>
@@ -518,23 +563,27 @@ const NILMDashboard = () => {
         <Grid item xs={12} lg={8}>
           <Paper sx={{ p: 3 }}>
             <Typography variant="h6" gutterBottom>
-              Power Consumption Over Time (Last 6 Hours)
+              Power Consumption Over Time ({rangeLabel} Window)
             </Typography>
             <ResponsiveContainer width="100%" height={400}>
               <LineChart data={chartData}>
                 <CartesianGrid strokeDasharray="3 3" />
-                <XAxis 
-                  dataKey="time" 
+                <XAxis
+                  dataKey="timestamp"
+                  type="number"
+                  domain={[xMin, xMax]}
+                  tickFormatter={timeTickFormatter}
                   label={{ value: 'Time', position: 'insideBottom', offset: -5 }}
                   tick={{ fontSize: 12 }}
                 />
-                <YAxis 
+                <YAxis
+                  domain={[yDomainMin, yDomainMax]}
                   label={{ value: 'Power (kW)', angle: -90, position: 'insideLeft' }}
                   tick={{ fontSize: 12 }}
                 />
-                <Tooltip 
-                  formatter={(value) => [`${value} kW`, '']}
-                  labelFormatter={(label) => `Time: ${label}`}
+                <Tooltip
+                  formatter={(value) => [`${value} kW`, 'Power']}
+                  labelFormatter={(label) => `Time: ${timeTickFormatter(label)}`}
                 />
                 <Legend />
                 <Line

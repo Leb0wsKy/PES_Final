@@ -35,9 +35,12 @@ router.get('/nilm', async (req, res) => {
     
     // Fetch data
     const sortOrder = parseInt(sort);
-    const data = await NILMData.find(query)
-      .sort({ timestamp: sortOrder })
-      .limit(parseInt(limit));
+    let queryExec = NILMData.find(query).sort({ timestamp: sortOrder });
+    const limitInt = parseInt(limit);
+    if (!Number.isNaN(limitInt) && limitInt > 0) {
+      queryExec = queryExec.limit(limitInt);
+    } // limit <=0 means no cap
+    const data = await queryExec;
     
     console.log(`Found ${data.length} NILM records for building: ${building}, location: ${location}`); // Debug log
     
