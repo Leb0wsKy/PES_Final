@@ -5,7 +5,6 @@ import os
 from typing import List, Dict
 import json
 from dotenv import load_dotenv
-import requests
 
 # Load environment variables from .env if present
 load_dotenv()
