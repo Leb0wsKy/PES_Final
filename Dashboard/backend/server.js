@@ -172,6 +172,17 @@ app.get('/api/chatbot/suggest', async (req, res) => {
   }
 });
 
+app.post('/api/chatbot/refresh', async (req, res) => {
+  try {
+    const response = await axios.post(`${CHATBOT_API}/refresh_dataset_index`);
+    res.json(response.data);
+  } catch (error) {
+    res.status(error.response?.status || 500).json({
+      error: error.response?.data?.error || error.message
+    });
+  }
+});
+
 // ==================== Mock Data Generation ====================
 
 // Generate mock NILM data

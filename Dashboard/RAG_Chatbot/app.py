@@ -5,6 +5,7 @@ import os
 from typing import List, Dict
 import json
 from dotenv import load_dotenv
+from threading import Lock
 
 # Load environment variables from .env if present
 load_dotenv()
@@ -14,14 +15,19 @@ import os
 os.environ['TF_ENABLE_ONEDNN_OPTS'] = '0'
 os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'
 
-try:
-    from sentence_transformers import SentenceTransformer
-    import numpy as np
-    EMBEDDINGS_AVAILABLE = True
-except Exception as e:
-    EMBEDDINGS_AVAILABLE = False
-    print(f"⚠️  Embeddings not available: {str(e)[:100]}")
-    print("   Chatbot will use keyword-based search")
+# Disable embeddings temporarily due to Keras 3 compatibility issue
+EMBEDDINGS_AVAILABLE = False
+print("⚠️  Embeddings disabled (Keras 3 compatibility)")
+print("   Chatbot will use keyword-based search")
+
+# try:
+#     from sentence_transformers import SentenceTransformer
+#     import numpy as np
+#     EMBEDDINGS_AVAILABLE = True
+# except Exception as e:
+#     EMBEDDINGS_AVAILABLE = False
+#     print(f"⚠️  Embeddings not available: {str(e)[:100]}")
+#     print("   Chatbot will use keyword-based search")
 
 try:
     import openai
@@ -44,6 +50,8 @@ CORS(app)
 # Configuration
 OPENAI_API_KEY = os.getenv('OPENAI_API_KEY', '')
 GEMINI_API_KEY = os.getenv('GEMINI_API_KEY', '')
+MONGODB_URI = os.getenv('MONGODB_URI', 'mongodb://localhost:27017/pes_dashboard')
+DATASET_INDEX_LIMIT = int(os.getenv('DATASET_INDEX_LIMIT', '300'))
 
 ACTIVE_LLM = None
 
@@ -63,7 +71,7 @@ if not ACTIVE_LLM and OPENAI_API_KEY and OPENAI_AVAILABLE:
     except Exception as e:
         print(f"⚠️  Failed to configure OpenAI: {e}")
 
-# Knowledge base for RAG
+# Knowledge base for RAG (static docs)
 KNOWLEDGE_BASE = [
     {
         "topic": "NILM System",
@@ -128,7 +136,8 @@ class SimpleVectorStore:
         self.model = None
         if EMBEDDINGS_AVAILABLE:
             try:
-                self.model = SentenceTransformer('all-MiniLM-L6-v2')
+                # Placeholder - embeddings disabled for now
+                # self.model = SentenceTransformer('all-MiniLM-L6-v2')
                 print("✅ Embedding model loaded successfully")
             except Exception as e:
                 print(f"⚠️  Could not load embedding model: {e}")
@@ -137,9 +146,9 @@ class SimpleVectorStore:
         """Add documents to the vector store"""
         self.documents = documents
         if self.model:
-            texts = [doc['content'] for doc in documents]
             try:
-                self.embeddings = self.model.encode(texts)
+                texts = [doc['content'] for doc in documents]
+                # self.embeddings = self.model.encode(texts)
                 print(f"✅ Indexed {len(texts)} documents")
             except Exception as e:
                 print(f"⚠️  Could not create embeddings: {e}")
@@ -151,28 +160,65 @@ class SimpleVectorStore:
             return self._keyword_search(query, top_k)
         
         try:
-            query_embedding = self.model.encode([query])[0]
-            similarities = np.dot(self.embeddings, query_embedding)
-            top_indices = np.argsort(similarities)[-top_k:][::-1]
-            return [self.documents[i] for i in top_indices]
+            # query_embedding = self.model.encode([query])[0]
+            # similarities = np.dot(self.embeddings, query_embedding)
+            # top_indices = np.argsort(similarities)[-top_k:][::-1]
+            # return [self.documents[i] for i in top_indices]
+            return self._keyword_search(query, top_k)
         except Exception as e:
             print(f"⚠️  Search error: {e}")
             return self._keyword_search(query, top_k)
     
     def _keyword_search(self, query: str, top_k: int = 3) -> List[Dict]:
-        """Fallback keyword-based search"""
+        """Fallback keyword-based search with location aliases"""
         query_lower = query.lower()
+        
+        # Normalize location names
+        location_aliases = {
+            'los angeles': 'LA',
+            'l.a.': 'LA',
+            'la': 'LA'
+        }
+        
+        # Replace aliases in query
+        for alias, canonical in location_aliases.items():
+            if alias in query_lower:
+                query_lower = query_lower.replace(alias, canonical.lower())
+        
         scored_docs = []
         for doc in self.documents:
+            doc_text = (doc['content'] + ' ' + doc['topic']).lower()
             score = sum(1 for word in query_lower.split() 
-                       if word in doc['content'].lower() or word in doc['topic'].lower())
+                       if word in doc_text)
             scored_docs.append((score, doc))
         scored_docs.sort(reverse=True, key=lambda x: x[0])
         return [doc for _, doc in scored_docs[:top_k]]
 
-# Initialize vector store
-vector_store = SimpleVectorStore()
+# Initialize vector stores
+vector_store = SimpleVectorStore()  # static docs
 vector_store.add_documents(KNOWLEDGE_BASE)
+
+# Dataset-derived vector store (Mongo summaries)
+dataset_vector_store = SimpleVectorStore()
+dataset_docs_loaded = False
+dataset_lock = Lock()
+
+try:
+    from data_ingestion import load_dataset_documents
+    def _load_dataset_index():
+        global dataset_docs_loaded
+        with dataset_lock:
+            docs = load_dataset_documents(MONGODB_URI, limit=DATASET_INDEX_LIMIT)
+            if docs:
+                dataset_vector_store.add_documents(docs)
+                dataset_docs_loaded = True
+            else:
+                dataset_docs_loaded = False
+    # Initial load (non-blocking graceful)
+    _load_dataset_index()
+except Exception as e:
+    print(f"⚠️  Dataset ingestion unavailable: {e}")
+    dataset_docs_loaded = False
 
 def format_live_data_context(nilm_data, pv_data):
     """Format live API data into readable context for the LLM"""
@@ -239,10 +285,10 @@ def generate_response(query: str, context: List[Dict], conversation_history: Lis
         try:
             model = genai.GenerativeModel('gemini-1.5-flash')
             system_preamble = (
-                "You are PowerPulse Assistant, a helpful AI monitoring assistant for an energy dashboard. "
-                "Use the provided REAL-TIME system data and documentation context to answer questions about NILM and PV systems. "
-                "Always prioritize real-time data when available. Explain faults, provide troubleshooting guidance, "
-                "and be specific about current system status. Be concise and technical when needed. If you don't know, say so.\n\n"
+                "You are PowerPulse Assistant, a helpful AI for an energy dashboard. "
+                "IMPORTANT: Use the historical dataset information provided in the context to answer specific questions about buildings, locations, and energy metrics. "
+                "When asked about specific buildings or locations (like Office-LA, Dealer-Tokyo, etc.), provide the exact numbers from the historical data. "
+                "Always cite specific values from the context when available. Be precise and data-driven.\n\n"
                 f"Context:\n{context_text}\n\n"
             )
             history_text = "\n\n".join([f"{m['role'].capitalize()}: {m['content']}" for m in (conversation_history or [])[-6:]])
@@ -289,6 +335,12 @@ def generate_response(query: str, context: List[Dict], conversation_history: Lis
 def generate_fallback_response(query: str, context: List[Dict], live_data: str = None) -> str:
     """Generate template-based response when LLM is not available"""
     query_lower = query.lower()
+    
+    # First check if we have specific dataset context
+    if context:
+        for doc in context:
+            if 'Historical NILM' in doc.get('topic', '') or 'Historical PV' in doc.get('topic', ''):
+                return f"Here's what I found from the historical data:\n\n{doc['content']}\n\nWould you like more details about any specific aspect?"
     
     # If we have live data, try to answer based on it first
     if live_data:
@@ -353,6 +405,25 @@ def generate_fallback_response(query: str, context: List[Dict], live_data: str =
     
     What would you like to know?"""
 
+def retrieve_context(user_message: str) -> List[Dict]:
+    """Combine static KB and dataset-derived docs based on query semantics."""
+    base_docs = vector_store.search(user_message, top_k=3)
+    extra_docs: List[Dict] = []
+    q = user_message.lower()
+    if dataset_docs_loaded:
+        if any(w in q for w in ['nilm', 'appliance', 'consumption', 'aggregate', 'evse', 'chp', 'battery', 'ba']):
+            extra_docs.extend(dataset_vector_store.search(user_message, top_k=2))
+        if any(w in q for w in ['pv', 'solar', 'irradiance', 'panel', 'temperature', 'fault', 'power']):
+            extra_docs.extend(dataset_vector_store.search(user_message, top_k=2))
+    # De-duplicate by topic preserving order
+    seen = set()
+    combined = []
+    for d in base_docs + extra_docs:
+        if d['topic'] not in seen:
+            combined.append(d)
+            seen.add(d['topic'])
+    return combined[:6]
+
 @app.route('/health', methods=['GET'])
 def health():
     """Health check endpoint"""
@@ -363,6 +434,8 @@ def health():
         'llm_provider': ACTIVE_LLM or 'fallback',
         'llm_available': bool(ACTIVE_LLM),
         'knowledge_base_size': len(KNOWLEDGE_BASE),
+        'dataset_index_loaded': dataset_docs_loaded,
+        'dataset_index_size': len(dataset_vector_store.documents) if dataset_docs_loaded else 0,
         'timestamp': datetime.now().isoformat()
     })
 
@@ -388,8 +461,8 @@ def chat():
         # Format live data into context
         live_data_context = format_live_data_context(nilm_data, pv_data)
         
-        # Retrieve relevant context using RAG
-        relevant_docs = vector_store.search(user_message, top_k=3)
+        # Retrieve relevant context (static + dataset-derived)
+        relevant_docs = retrieve_context(user_message)
         
         # Generate response
         response_text = generate_response(
@@ -454,6 +527,19 @@ def suggest_questions():
     ]
     return jsonify({'suggestions': suggestions})
 
+@app.route('/refresh_dataset_index', methods=['POST'])
+def refresh_dataset_index():
+    """Force reloading the dataset-derived vector index from MongoDB."""
+    try:
+        _load_dataset_index()
+        return jsonify({
+            'success': True,
+            'dataset_index_loaded': dataset_docs_loaded,
+            'dataset_index_size': len(dataset_vector_store.documents)
+        })
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
 if __name__ == '__main__':
     print("=" * 60)
     print("PowerPulse RAG Chatbot API")
@@ -461,8 +547,9 @@ if __name__ == '__main__':
     print(f"Embeddings: {'✅ Available' if EMBEDDINGS_AVAILABLE else '⚠️  Not available'}")
     print(f"LLM (OpenAI): {'✅ Available' if (OPENAI_AVAILABLE and OPENAI_API_KEY) else '⚠️  Not available'}")
     print(f"Knowledge Base: {len(KNOWLEDGE_BASE)} documents")
+    print(f"Dataset Index: {'✅ Loaded' if dataset_docs_loaded else '⚠️  Not Loaded'} | Docs: {len(dataset_vector_store.documents) if dataset_docs_loaded else 0}")
     print("=" * 60)
     print("Starting server on port 5003...")
     print("=" * 60)
     
-    app.run(host='0.0.0.0', port=5003, debug=True)
+    app.run(host='0.0.0.0', port=5003, debug=False)

@@ -7,3 +7,5 @@ openai>=1.0.0
 sentence-transformers>=2.2.0
 numpy>=1.26.0
 # transformers and torch are pulled by sentence-transformers when needed
+## MongoDB access for dataset retrieval
+pymongo>=4.6.0
