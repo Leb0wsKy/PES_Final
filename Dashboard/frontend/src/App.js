@@ -15,7 +15,18 @@ import {
   CssBaseline,
   IconButton,
   Menu,
-  MenuItem
+  MenuItem,
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  TextField,
+  Button,
+  Grid,
+  Card,
+  CardContent,
+  Switch,
+  FormControlLabel,
+  Divider
 } from '@mui/material';
 import { createTheme, ThemeProvider } from '@mui/material/styles';
 import {
@@ -26,7 +37,8 @@ import {
   Logout,
   LightMode,
   DarkMode,
-  PrecisionManufacturing
+  PrecisionManufacturing,
+  Settings as SettingsIcon
 } from '@mui/icons-material';
 import { AuthProvider, useAuth } from './context/AuthContext';
 import { DashboardProvider } from './context/DashboardContext';
@@ -48,6 +60,8 @@ function DashboardContent() {
   const [loading, setLoading] = useState(true);
   const [mode, setMode] = useState(() => localStorage.getItem('themeMode') || 'light');
   const [anchorEl, setAnchorEl] = useState(null);
+  const [settingsOpen, setSettingsOpen] = useState(false);
+  const [settingsTab, setSettingsTab] = useState(0);
 
   const handleMenuOpen = (event) => {
     setAnchorEl(event.currentTarget);
@@ -55,6 +69,20 @@ function DashboardContent() {
 
   const handleMenuClose = () => {
     setAnchorEl(null);
+  };
+
+  const handleSettingsOpen = () => {
+    setSettingsOpen(true);
+    setAnchorEl(null);
+  };
+
+  const handleSettingsClose = () => {
+    setSettingsOpen(false);
+    setSettingsTab(0);
+  };
+
+  const handleSettingsTabChange = (event, newValue) => {
+    setSettingsTab(newValue);
   };
 
   const handleLogout = () => {
@@ -672,11 +700,1040 @@ function DashboardContent() {
                   {user?.email}
                 </Typography>
               </MenuItem>
+              <MenuItem onClick={handleSettingsOpen}>
+                <SettingsIcon fontSize="small" sx={{ mr: 1 }} />
+                Settings
+              </MenuItem>
               <MenuItem onClick={handleLogout}>
                 <Logout fontSize="small" sx={{ mr: 1 }} />
                 Logout
               </MenuItem>
             </Menu>
+
+            {/* Settings Dialog */}
+            <Dialog
+              open={settingsOpen}
+              onClose={handleSettingsClose}
+              maxWidth="md"
+              fullWidth
+              PaperProps={{
+                sx: {
+                  borderRadius: 4,
+                  background: mode === 'dark'
+                    ? 'linear-gradient(135deg, rgba(15,23,42,0.95), rgba(30,41,59,0.95))'
+                    : 'linear-gradient(135deg, rgba(255,255,255,0.95), rgba(249,250,251,0.95))',
+                  backdropFilter: 'blur(24px)',
+                  border: mode === 'dark'
+                    ? '1px solid rgba(74,222,128,0.3)'
+                    : '1px solid rgba(16,185,129,0.3)',
+                  boxShadow: mode === 'dark'
+                    ? '0 20px 60px -10px rgba(74,222,128,0.25), 0 0 0 1px rgba(74,222,128,0.1) inset'
+                    : '0 20px 60px -10px rgba(16,185,129,0.2), 0 0 0 1px rgba(16,185,129,0.1) inset',
+                  overflow: 'hidden',
+                  position: 'relative'
+                }
+              }}
+              BackdropProps={{
+                sx: {
+                  backdropFilter: 'blur(8px)',
+                  background: mode === 'dark'
+                    ? 'rgba(0,0,0,0.7)'
+                    : 'rgba(0,0,0,0.4)'
+                }
+              }}
+            >
+              <DialogTitle sx={{ 
+                pb: 2,
+                pt: 3,
+                px: 3,
+                background: mode === 'dark'
+                  ? 'linear-gradient(135deg, rgba(74,222,128,0.08), rgba(96,165,250,0.08))'
+                  : 'linear-gradient(135deg, rgba(16,185,129,0.08), rgba(59,130,246,0.08))',
+                borderBottom: mode === 'dark'
+                  ? '1px solid rgba(74,222,128,0.2)'
+                  : '1px solid rgba(16,185,129,0.2)',
+                position: 'relative'
+              }}>
+                <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
+                    <SettingsIcon sx={{ 
+                      fontSize: 28,
+                      color: mode === 'dark' ? '#4ade80' : '#10b981',
+                      filter: 'drop-shadow(0 2px 4px rgba(74,222,128,0.3))'
+                    }} />
+                    <Typography variant="h5" sx={{ 
+                      fontWeight: 700,
+                      background: mode === 'dark'
+                        ? 'linear-gradient(135deg, #4ade80, #60a5fa)'
+                        : 'linear-gradient(135deg, #10b981, #3b82f6)',
+                      WebkitBackgroundClip: 'text',
+                      WebkitTextFillColor: 'transparent',
+                      letterSpacing: '-0.5px'
+                    }}>
+                      Settings
+                    </Typography>
+                  </Box>
+                  <IconButton
+                    onClick={handleSettingsClose}
+                    size="small"
+                    sx={{
+                      color: mode === 'dark' ? 'rgba(255,255,255,0.7)' : 'rgba(0,0,0,0.6)',
+                      '&:hover': {
+                        background: mode === 'dark'
+                          ? 'rgba(74,222,128,0.15)'
+                          : 'rgba(16,185,129,0.15)',
+                        color: mode === 'dark' ? '#4ade80' : '#10b981'
+                      }
+                    }}
+                  >
+                    <Box component="span" sx={{ fontSize: 24, fontWeight: 300 }}>×</Box>
+                  </IconButton>
+                </Box>
+              </DialogTitle>
+              <Box sx={{ 
+                borderBottom: mode === 'dark'
+                  ? '1px solid rgba(74,222,128,0.15)'
+                  : '1px solid rgba(16,185,129,0.15)',
+                px: 3,
+                background: mode === 'dark'
+                  ? 'rgba(15,23,42,0.3)'
+                  : 'rgba(249,250,251,0.5)'
+              }}>
+                <Tabs 
+                  value={settingsTab} 
+                  onChange={handleSettingsTabChange}
+                  TabIndicatorProps={{
+                    sx: {
+                      height: 3,
+                      borderRadius: '3px 3px 0 0',
+                      background: mode === 'dark'
+                        ? 'linear-gradient(90deg, #4ade80, #60a5fa)'
+                        : 'linear-gradient(90deg, #10b981, #3b82f6)',
+                      boxShadow: mode === 'dark'
+                        ? '0 -2px 8px rgba(74,222,128,0.4)'
+                        : '0 -2px 8px rgba(16,185,129,0.3)'
+                    }
+                  }}
+                  sx={{
+                    minHeight: 54,
+                    '& .MuiTab-root': {
+                      minHeight: 54,
+                      fontWeight: 600,
+                      fontSize: '0.9rem',
+                      textTransform: 'none',
+                      color: mode === 'dark' ? 'rgba(255,255,255,0.6)' : 'rgba(0,0,0,0.5)',
+                      transition: 'all 0.3s ease',
+                      '&.Mui-selected': {
+                        color: mode === 'dark' ? '#4ade80' : '#10b981',
+                        fontWeight: 700
+                      },
+                      '&:hover': {
+                        color: mode === 'dark' ? 'rgba(74,222,128,0.8)' : 'rgba(16,185,129,0.8)',
+                        background: mode === 'dark'
+                          ? 'rgba(74,222,128,0.05)'
+                          : 'rgba(16,185,129,0.05)'
+                      }
+                    }
+                  }}
+                >
+                  <Tab label="Profile Settings" />
+                  <Tab label="Machines Settings" />
+                  <Tab label="Plans" />
+                </Tabs>
+              </Box>
+              <DialogContent sx={{ 
+                pt: 4, 
+                pb: 4, 
+                px: 4,
+                background: mode === 'dark'
+                  ? 'rgba(15,23,42,0.2)'
+                  : 'rgba(255,255,255,0.3)'
+              }}>
+                {/* Profile Settings Tab */}
+                {settingsTab === 0 && (
+                  <Box>
+                    <Typography variant="h6" sx={{ 
+                      mb: 3, 
+                      fontWeight: 700,
+                      color: mode === 'dark' ? '#fff' : '#1f2937',
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: 1
+                    }}>
+                      Profile Information
+                    </Typography>
+                    <Grid container spacing={3}>
+                      <Grid item xs={12} sm={6}>
+                        <TextField
+                          fullWidth
+                          label="Full Name"
+                          defaultValue={user?.name || ''}
+                          variant="outlined"
+                          sx={{
+                            '& .MuiOutlinedInput-root': {
+                              borderRadius: 2,
+                              background: mode === 'dark'
+                                ? 'rgba(30,41,59,0.5)'
+                                : 'rgba(255,255,255,0.8)',
+                              '& fieldset': {
+                                borderColor: mode === 'dark'
+                                  ? 'rgba(74,222,128,0.2)'
+                                  : 'rgba(16,185,129,0.2)',
+                                borderWidth: 1.5
+                              },
+                              '&:hover fieldset': {
+                                borderColor: mode === 'dark'
+                                  ? 'rgba(74,222,128,0.4)'
+                                  : 'rgba(16,185,129,0.4)'
+                              },
+                              '&.Mui-focused fieldset': {
+                                borderColor: mode === 'dark' ? '#4ade80' : '#10b981',
+                                borderWidth: 2
+                              }
+                            },
+                            '& .MuiInputLabel-root.Mui-focused': {
+                              color: mode === 'dark' ? '#4ade80' : '#10b981'
+                            }
+                          }}
+                        />
+                      </Grid>
+                      <Grid item xs={12} sm={6}>
+                        <TextField
+                          fullWidth
+                          label="Email"
+                          defaultValue={user?.email || ''}
+                          variant="outlined"
+                          disabled
+                          sx={{
+                            '& .MuiOutlinedInput-root': {
+                              borderRadius: 2,
+                              background: mode === 'dark'
+                                ? 'rgba(30,41,59,0.3)'
+                                : 'rgba(249,250,251,0.8)',
+                              '& fieldset': {
+                                borderColor: mode === 'dark'
+                                  ? 'rgba(74,222,128,0.15)'
+                                  : 'rgba(16,185,129,0.15)'
+                              }
+                            }
+                          }}
+                        />
+                      </Grid>
+                      <Grid item xs={12} sm={6}>
+                        <TextField
+                          fullWidth
+                          label="Phone Number"
+                          placeholder="+1 (555) 000-0000"
+                          variant="outlined"
+                          sx={{
+                            '& .MuiOutlinedInput-root': {
+                              borderRadius: 2,
+                              background: mode === 'dark'
+                                ? 'rgba(30,41,59,0.5)'
+                                : 'rgba(255,255,255,0.8)',
+                              '& fieldset': {
+                                borderColor: mode === 'dark'
+                                  ? 'rgba(74,222,128,0.2)'
+                                  : 'rgba(16,185,129,0.2)',
+                                borderWidth: 1.5
+                              },
+                              '&:hover fieldset': {
+                                borderColor: mode === 'dark'
+                                  ? 'rgba(74,222,128,0.4)'
+                                  : 'rgba(16,185,129,0.4)'
+                              },
+                              '&.Mui-focused fieldset': {
+                                borderColor: mode === 'dark' ? '#4ade80' : '#10b981',
+                                borderWidth: 2
+                              }
+                            },
+                            '& .MuiInputLabel-root.Mui-focused': {
+                              color: mode === 'dark' ? '#4ade80' : '#10b981'
+                            }
+                          }}
+                        />
+                      </Grid>
+                      <Grid item xs={12} sm={6}>
+                        <TextField
+                          fullWidth
+                          label="Company"
+                          placeholder="Your Company Name"
+                          variant="outlined"
+                          sx={{
+                            '& .MuiOutlinedInput-root': {
+                              borderRadius: 2,
+                              background: mode === 'dark'
+                                ? 'rgba(30,41,59,0.5)'
+                                : 'rgba(255,255,255,0.8)',
+                              '& fieldset': {
+                                borderColor: mode === 'dark'
+                                  ? 'rgba(74,222,128,0.2)'
+                                  : 'rgba(16,185,129,0.2)',
+                                borderWidth: 1.5
+                              },
+                              '&:hover fieldset': {
+                                borderColor: mode === 'dark'
+                                  ? 'rgba(74,222,128,0.4)'
+                                  : 'rgba(16,185,129,0.4)'
+                              },
+                              '&.Mui-focused fieldset': {
+                                borderColor: mode === 'dark' ? '#4ade80' : '#10b981',
+                                borderWidth: 2
+                              }
+                            },
+                            '& .MuiInputLabel-root.Mui-focused': {
+                              color: mode === 'dark' ? '#4ade80' : '#10b981'
+                            }
+                          }}
+                        />
+                      </Grid>
+                      <Grid item xs={12}>
+                        <Divider sx={{ 
+                          my: 2,
+                          borderColor: mode === 'dark'
+                            ? 'rgba(74,222,128,0.15)'
+                            : 'rgba(16,185,129,0.15)'
+                        }} />
+                        <Typography variant="h6" sx={{ 
+                          mb: 3, 
+                          fontWeight: 700,
+                          color: mode === 'dark' ? '#fff' : '#1f2937'
+                        }}>
+                          Notification Preferences
+                        </Typography>
+                      </Grid>
+                      <Grid item xs={12}>
+                        <FormControlLabel
+                          control={
+                            <Switch 
+                              defaultChecked 
+                              sx={{
+                                '& .MuiSwitch-switchBase.Mui-checked': {
+                                  color: mode === 'dark' ? '#4ade80' : '#10b981'
+                                },
+                                '& .MuiSwitch-switchBase.Mui-checked + .MuiSwitch-track': {
+                                  backgroundColor: mode === 'dark' ? '#4ade80' : '#10b981'
+                                }
+                              }}
+                            />
+                          }
+                          label="Email notifications for alerts"
+                          sx={{
+                            '& .MuiFormControlLabel-label': {
+                              fontSize: '0.95rem',
+                              fontWeight: 500,
+                              color: mode === 'dark' ? 'rgba(255,255,255,0.9)' : 'rgba(0,0,0,0.8)'
+                            }
+                          }}
+                        />
+                      </Grid>
+                      <Grid item xs={12}>
+                        <FormControlLabel
+                          control={
+                            <Switch 
+                              defaultChecked 
+                              sx={{
+                                '& .MuiSwitch-switchBase.Mui-checked': {
+                                  color: mode === 'dark' ? '#4ade80' : '#10b981'
+                                },
+                                '& .MuiSwitch-switchBase.Mui-checked + .MuiSwitch-track': {
+                                  backgroundColor: mode === 'dark' ? '#4ade80' : '#10b981'
+                                }
+                              }}
+                            />
+                          }
+                          label="SMS notifications for critical issues"
+                          sx={{
+                            '& .MuiFormControlLabel-label': {
+                              fontSize: '0.95rem',
+                              fontWeight: 500,
+                              color: mode === 'dark' ? 'rgba(255,255,255,0.9)' : 'rgba(0,0,0,0.8)'
+                            }
+                          }}
+                        />
+                      </Grid>
+                      <Grid item xs={12}>
+                        <FormControlLabel
+                          control={
+                            <Switch 
+                              sx={{
+                                '& .MuiSwitch-switchBase.Mui-checked': {
+                                  color: mode === 'dark' ? '#4ade80' : '#10b981'
+                                },
+                                '& .MuiSwitch-switchBase.Mui-checked + .MuiSwitch-track': {
+                                  backgroundColor: mode === 'dark' ? '#4ade80' : '#10b981'
+                                }
+                              }}
+                            />
+                          }
+                          label="Weekly performance reports"
+                          sx={{
+                            '& .MuiFormControlLabel-label': {
+                              fontSize: '0.95rem',
+                              fontWeight: 500,
+                              color: mode === 'dark' ? 'rgba(255,255,255,0.9)' : 'rgba(0,0,0,0.8)'
+                            }
+                          }}
+                        />
+                      </Grid>
+                      <Grid item xs={12} sx={{ mt: 2 }}>
+                        <Button
+                          variant="contained"
+                          size="large"
+                          sx={{
+                            background: mode === 'dark'
+                              ? 'linear-gradient(135deg, #4ade80, #60a5fa)'
+                              : 'linear-gradient(135deg, #10b981, #3b82f6)',
+                            color: '#fff',
+                            fontWeight: 700,
+                            px: 5,
+                            py: 1.5,
+                            borderRadius: 2.5,
+                            textTransform: 'none',
+                            fontSize: '1rem',
+                            boxShadow: mode === 'dark'
+                              ? '0 8px 24px -6px rgba(74,222,128,0.4)'
+                              : '0 8px 24px -6px rgba(16,185,129,0.35)',
+                            transition: 'all 0.3s ease',
+                            '&:hover': {
+                              transform: 'translateY(-3px)',
+                              boxShadow: mode === 'dark'
+                                ? '0 12px 32px -6px rgba(74,222,128,0.5)'
+                                : '0 12px 32px -6px rgba(16,185,129,0.45)'
+                            }
+                          }}
+                        >
+                          Save Changes
+                        </Button>
+                      </Grid>
+                    </Grid>
+                  </Box>
+                )}
+
+                {/* Machines Settings Tab */}
+                {settingsTab === 1 && (
+                  <Box>
+                    <Typography variant="h6" sx={{ 
+                      mb: 3, 
+                      fontWeight: 700,
+                      color: mode === 'dark' ? '#fff' : '#1f2937'
+                    }}>
+                      Machine Management
+                    </Typography>
+                    <Grid container spacing={3}>
+                      <Grid item xs={12}>
+                        <Card sx={{ 
+                          background: mode === 'dark'
+                            ? 'linear-gradient(135deg, rgba(30,41,59,0.6), rgba(51,65,85,0.6))'
+                            : 'linear-gradient(135deg, rgba(255,255,255,0.8), rgba(249,250,251,0.8))',
+                          border: mode === 'dark'
+                            ? '1.5px solid rgba(74,222,128,0.25)'
+                            : '1.5px solid rgba(16,185,129,0.25)',
+                          borderRadius: 3,
+                          boxShadow: mode === 'dark'
+                            ? '0 8px 24px -6px rgba(74,222,128,0.2)'
+                            : '0 8px 24px -6px rgba(16,185,129,0.15)',
+                          transition: 'all 0.3s ease',
+                          '&:hover': {
+                            transform: 'translateY(-2px)',
+                            boxShadow: mode === 'dark'
+                              ? '0 12px 32px -6px rgba(74,222,128,0.3)'
+                              : '0 12px 32px -6px rgba(16,185,129,0.25)'
+                          }
+                        }}>
+                          <CardContent sx={{ p: 3 }}>
+                            <Typography variant="subtitle1" sx={{ 
+                              fontWeight: 700, 
+                              mb: 3,
+                              color: mode === 'dark' ? '#4ade80' : '#10b981',
+                              fontSize: '1.05rem'
+                            }}>
+                              Default Alert Thresholds
+                            </Typography>
+                            <Grid container spacing={2}>
+                              <Grid item xs={12} sm={6}>
+                                <TextField
+                                  fullWidth
+                                  label="Power Consumption Warning (%)"
+                                  type="number"
+                                  defaultValue="85"
+                                  variant="outlined"
+                                  size="small"
+                                  sx={{
+                                    '& .MuiOutlinedInput-root': {
+                                      borderRadius: 2,
+                                      background: mode === 'dark'
+                                        ? 'rgba(15,23,42,0.5)'
+                                        : 'rgba(255,255,255,0.9)',
+                                      '& fieldset': {
+                                        borderColor: mode === 'dark'
+                                          ? 'rgba(74,222,128,0.2)'
+                                          : 'rgba(16,185,129,0.2)',
+                                        borderWidth: 1.5
+                                      },
+                                      '&:hover fieldset': {
+                                        borderColor: mode === 'dark'
+                                          ? 'rgba(74,222,128,0.4)'
+                                          : 'rgba(16,185,129,0.4)'
+                                      },
+                                      '&.Mui-focused fieldset': {
+                                        borderColor: mode === 'dark' ? '#4ade80' : '#10b981',
+                                        borderWidth: 2
+                                      }
+                                    },
+                                    '& .MuiInputLabel-root.Mui-focused': {
+                                      color: mode === 'dark' ? '#4ade80' : '#10b981'
+                                    }
+                                  }}
+                                />
+                              </Grid>
+                              <Grid item xs={12} sm={6}>
+                                <TextField
+                                  fullWidth
+                                  label="Efficiency Warning (%)"
+                                  type="number"
+                                  defaultValue="70"
+                                  variant="outlined"
+                                  size="small"
+                                  sx={{
+                                    '& .MuiOutlinedInput-root': {
+                                      borderRadius: 2,
+                                      background: mode === 'dark'
+                                        ? 'rgba(15,23,42,0.5)'
+                                        : 'rgba(255,255,255,0.9)',
+                                      '& fieldset': {
+                                        borderColor: mode === 'dark'
+                                          ? 'rgba(74,222,128,0.2)'
+                                          : 'rgba(16,185,129,0.2)',
+                                        borderWidth: 1.5
+                                      },
+                                      '&:hover fieldset': {
+                                        borderColor: mode === 'dark'
+                                          ? 'rgba(74,222,128,0.4)'
+                                          : 'rgba(16,185,129,0.4)'
+                                      },
+                                      '&.Mui-focused fieldset': {
+                                        borderColor: mode === 'dark' ? '#4ade80' : '#10b981',
+                                        borderWidth: 2
+                                      }
+                                    },
+                                    '& .MuiInputLabel-root.Mui-focused': {
+                                      color: mode === 'dark' ? '#4ade80' : '#10b981'
+                                    }
+                                  }}
+                                />
+                              </Grid>
+                            </Grid>
+                          </CardContent>
+                        </Card>
+                      </Grid>
+                      <Grid item xs={12}>
+                        <Card sx={{ 
+                          background: mode === 'dark'
+                            ? 'linear-gradient(135deg, rgba(30,41,59,0.6), rgba(51,65,85,0.6))'
+                            : 'linear-gradient(135deg, rgba(255,255,255,0.8), rgba(249,250,251,0.8))',
+                          border: mode === 'dark'
+                            ? '1.5px solid rgba(74,222,128,0.25)'
+                            : '1.5px solid rgba(16,185,129,0.25)',
+                          borderRadius: 3,
+                          boxShadow: mode === 'dark'
+                            ? '0 8px 24px -6px rgba(74,222,128,0.2)'
+                            : '0 8px 24px -6px rgba(16,185,129,0.15)',
+                          transition: 'all 0.3s ease',
+                          '&:hover': {
+                            transform: 'translateY(-2px)',
+                            boxShadow: mode === 'dark'
+                              ? '0 12px 32px -6px rgba(74,222,128,0.3)'
+                              : '0 12px 32px -6px rgba(16,185,129,0.25)'
+                          }
+                        }}>
+                          <CardContent sx={{ p: 3 }}>
+                            <Typography variant="subtitle1" sx={{ 
+                              fontWeight: 700, 
+                              mb: 3,
+                              color: mode === 'dark' ? '#4ade80' : '#10b981',
+                              fontSize: '1.05rem'
+                            }}>
+                              Maintenance Settings
+                            </Typography>
+                            <Grid container spacing={2}>
+                              <Grid item xs={12}>
+                                <TextField
+                                  fullWidth
+                                  label="Default Maintenance Interval (days)"
+                                  type="number"
+                                  defaultValue="30"
+                                  variant="outlined"
+                                  size="small"
+                                  sx={{
+                                    '& .MuiOutlinedInput-root': {
+                                      borderRadius: 2,
+                                      background: mode === 'dark'
+                                        ? 'rgba(15,23,42,0.5)'
+                                        : 'rgba(255,255,255,0.9)',
+                                      '& fieldset': {
+                                        borderColor: mode === 'dark'
+                                          ? 'rgba(74,222,128,0.2)'
+                                          : 'rgba(16,185,129,0.2)',
+                                        borderWidth: 1.5
+                                      },
+                                      '&:hover fieldset': {
+                                        borderColor: mode === 'dark'
+                                          ? 'rgba(74,222,128,0.4)'
+                                          : 'rgba(16,185,129,0.4)'
+                                      },
+                                      '&.Mui-focused fieldset': {
+                                        borderColor: mode === 'dark' ? '#4ade80' : '#10b981',
+                                        borderWidth: 2
+                                      }
+                                    },
+                                    '& .MuiInputLabel-root.Mui-focused': {
+                                      color: mode === 'dark' ? '#4ade80' : '#10b981'
+                                    }
+                                  }}
+                                />
+                              </Grid>
+                              <Grid item xs={12}>
+                                <FormControlLabel
+                                  control={
+                                    <Switch 
+                                      defaultChecked 
+                                      sx={{
+                                        '& .MuiSwitch-switchBase.Mui-checked': {
+                                          color: mode === 'dark' ? '#4ade80' : '#10b981'
+                                        },
+                                        '& .MuiSwitch-switchBase.Mui-checked + .MuiSwitch-track': {
+                                          backgroundColor: mode === 'dark' ? '#4ade80' : '#10b981'
+                                        }
+                                      }}
+                                    />
+                                  }
+                                  label="Auto-schedule maintenance reminders"
+                                  sx={{
+                                    '& .MuiFormControlLabel-label': {
+                                      fontSize: '0.95rem',
+                                      fontWeight: 500,
+                                      color: mode === 'dark' ? 'rgba(255,255,255,0.9)' : 'rgba(0,0,0,0.8)'
+                                    }
+                                  }}
+                                />
+                              </Grid>
+                              <Grid item xs={12}>
+                                <FormControlLabel
+                                  control={
+                                    <Switch 
+                                      sx={{
+                                        '& .MuiSwitch-switchBase.Mui-checked': {
+                                          color: mode === 'dark' ? '#4ade80' : '#10b981'
+                                        },
+                                        '& .MuiSwitch-switchBase.Mui-checked + .MuiSwitch-track': {
+                                          backgroundColor: mode === 'dark' ? '#4ade80' : '#10b981'
+                                        }
+                                      }}
+                                    />
+                                  }
+                                  label="Enable predictive maintenance alerts"
+                                  sx={{
+                                    '& .MuiFormControlLabel-label': {
+                                      fontSize: '0.95rem',
+                                      fontWeight: 500,
+                                      color: mode === 'dark' ? 'rgba(255,255,255,0.9)' : 'rgba(0,0,0,0.8)'
+                                    }
+                                  }}
+                                />
+                              </Grid>
+                            </Grid>
+                          </CardContent>
+                        </Card>
+                      </Grid>
+                      <Grid item xs={12} sx={{ mt: 2 }}>
+                        <Button
+                          variant="contained"
+                          size="large"
+                          sx={{
+                            background: mode === 'dark'
+                              ? 'linear-gradient(135deg, #4ade80, #60a5fa)'
+                              : 'linear-gradient(135deg, #10b981, #3b82f6)',
+                            color: '#fff',
+                            fontWeight: 700,
+                            px: 5,
+                            py: 1.5,
+                            borderRadius: 2.5,
+                            textTransform: 'none',
+                            fontSize: '1rem',
+                            boxShadow: mode === 'dark'
+                              ? '0 8px 24px -6px rgba(74,222,128,0.4)'
+                              : '0 8px 24px -6px rgba(16,185,129,0.35)',
+                            transition: 'all 0.3s ease',
+                            '&:hover': {
+                              transform: 'translateY(-3px)',
+                              boxShadow: mode === 'dark'
+                                ? '0 12px 32px -6px rgba(74,222,128,0.5)'
+                                : '0 12px 32px -6px rgba(16,185,129,0.45)'
+                            }
+                          }}
+                        >
+                          Save Settings
+                        </Button>
+                      </Grid>
+                    </Grid>
+                  </Box>
+                )}
+
+                {/* Plans Tab */}
+                {settingsTab === 2 && (
+                  <Box>
+                    <Typography variant="h6" sx={{ 
+                      mb: 4, 
+                      fontWeight: 700,
+                      color: mode === 'dark' ? '#fff' : '#1f2937',
+                      textAlign: 'center'
+                    }}>
+                      Subscription Plans
+                    </Typography>
+                    <Grid container spacing={3}>
+                      <Grid item xs={12} md={4}>
+                        <Card sx={{ 
+                          height: '100%',
+                          background: mode === 'dark'
+                            ? 'linear-gradient(135deg, rgba(30,41,59,0.7), rgba(51,65,85,0.7))'
+                            : 'linear-gradient(135deg, rgba(255,255,255,0.9), rgba(249,250,251,0.9))',
+                          border: mode === 'dark'
+                            ? '1.5px solid rgba(74,222,128,0.25)'
+                            : '1.5px solid rgba(16,185,129,0.25)',
+                          borderRadius: 3,
+                          boxShadow: mode === 'dark'
+                            ? '0 8px 24px -6px rgba(74,222,128,0.2)'
+                            : '0 8px 24px -6px rgba(16,185,129,0.15)',
+                          transition: 'all 0.3s ease',
+                          '&:hover': {
+                            transform: 'translateY(-6px)',
+                            boxShadow: mode === 'dark'
+                              ? '0 16px 40px -8px rgba(74,222,128,0.35)'
+                              : '0 16px 40px -8px rgba(16,185,129,0.3)',
+                            border: mode === 'dark'
+                              ? '1.5px solid rgba(74,222,128,0.4)'
+                              : '1.5px solid rgba(16,185,129,0.4)'
+                          }
+                        }}>
+                          <CardContent sx={{ p: 3.5 }}>
+                            <Typography variant="overline" sx={{ 
+                              fontWeight: 700,
+                              color: mode === 'dark' ? 'rgba(255,255,255,0.6)' : 'rgba(0,0,0,0.5)',
+                              letterSpacing: '1px'
+                            }}>
+                              STARTER
+                            </Typography>
+                            <Typography variant="h5" sx={{ fontWeight: 800, mb: 1, mt: 1 }}>
+                              Free
+                            </Typography>
+                            <Typography variant="h3" sx={{ 
+                              fontWeight: 800, 
+                              mb: 1,
+                              background: mode === 'dark'
+                                ? 'linear-gradient(135deg, #4ade80, #60a5fa)'
+                                : 'linear-gradient(135deg, #10b981, #3b82f6)',
+                              WebkitBackgroundClip: 'text',
+                              WebkitTextFillColor: 'transparent'
+                            }}>
+                              $0
+                            </Typography>
+                            <Typography variant="body2" sx={{ 
+                              color: mode === 'dark' ? 'rgba(255,255,255,0.6)' : 'rgba(0,0,0,0.5)',
+                              mb: 3
+                            }}>
+                              per month
+                            </Typography>
+                            <Divider sx={{ 
+                              my: 3,
+                              borderColor: mode === 'dark'
+                                ? 'rgba(74,222,128,0.2)'
+                                : 'rgba(16,185,129,0.2)'
+                            }} />
+                            <Box sx={{ mb: 3 }}>
+                              <Typography variant="body2" sx={{ mb: 1.5, display: 'flex', alignItems: 'center', gap: 1 }}>
+                                <Box component="span" sx={{ color: mode === 'dark' ? '#4ade80' : '#10b981', fontWeight: 700 }}>✓</Box>
+                                Up to 5 machines
+                              </Typography>
+                              <Typography variant="body2" sx={{ mb: 1.5, display: 'flex', alignItems: 'center', gap: 1 }}>
+                                <Box component="span" sx={{ color: mode === 'dark' ? '#4ade80' : '#10b981', fontWeight: 700 }}>✓</Box>
+                                Basic monitoring
+                              </Typography>
+                              <Typography variant="body2" sx={{ mb: 1.5, display: 'flex', alignItems: 'center', gap: 1 }}>
+                                <Box component="span" sx={{ color: mode === 'dark' ? '#4ade80' : '#10b981', fontWeight: 700 }}>✓</Box>
+                                Email support
+                              </Typography>
+                              <Typography variant="body2" sx={{ mb: 1.5, display: 'flex', alignItems: 'center', gap: 1 }}>
+                                <Box component="span" sx={{ color: mode === 'dark' ? '#4ade80' : '#10b981', fontWeight: 700 }}>✓</Box>
+                                7-day data retention
+                              </Typography>
+                            </Box>
+                            <Button
+                              fullWidth
+                              variant="outlined"
+                              size="large"
+                              sx={{
+                                borderColor: mode === 'dark' ? 'rgba(74,222,128,0.5)' : 'rgba(16,185,129,0.5)',
+                                color: mode === 'dark' ? '#4ade80' : '#10b981',
+                                fontWeight: 700,
+                                borderWidth: 1.5,
+                                borderRadius: 2,
+                                py: 1.25,
+                                textTransform: 'none',
+                                '&:hover': {
+                                  borderColor: mode === 'dark' ? '#4ade80' : '#10b981',
+                                  borderWidth: 1.5,
+                                  background: mode === 'dark'
+                                    ? 'rgba(74,222,128,0.1)'
+                                    : 'rgba(16,185,129,0.1)'
+                                }
+                              }}
+                            >
+                              Current Plan
+                            </Button>
+                          </CardContent>
+                        </Card>
+                      </Grid>
+                      <Grid item xs={12} md={4}>
+                        <Card sx={{ 
+                          height: '100%',
+                          background: mode === 'dark'
+                            ? 'linear-gradient(135deg, rgba(74,222,128,0.12), rgba(96,165,250,0.12))'
+                            : 'linear-gradient(135deg, rgba(16,185,129,0.12), rgba(59,130,246,0.12))',
+                          border: mode === 'dark'
+                            ? '2px solid rgba(74,222,128,0.6)'
+                            : '2px solid rgba(16,185,129,0.6)',
+                          borderRadius: 3,
+                          boxShadow: mode === 'dark'
+                            ? '0 12px 36px -6px rgba(74,222,128,0.35)'
+                            : '0 12px 36px -6px rgba(16,185,129,0.3)',
+                          transition: 'all 0.3s ease',
+                          position: 'relative',
+                          '&:hover': {
+                            transform: 'translateY(-8px) scale(1.02)',
+                            boxShadow: mode === 'dark'
+                              ? '0 20px 50px -8px rgba(74,222,128,0.5)'
+                              : '0 20px 50px -8px rgba(16,185,129,0.45)',
+                            border: mode === 'dark'
+                              ? '2px solid rgba(74,222,128,0.8)'
+                              : '2px solid rgba(16,185,129,0.8)'
+                          }
+                        }}>
+                          <Box sx={{ 
+                            position: 'absolute',
+                            top: 16,
+                            right: 16,
+                            background: mode === 'dark'
+                              ? 'linear-gradient(135deg, #4ade80, #60a5fa)'
+                              : 'linear-gradient(135deg, #10b981, #3b82f6)',
+                            color: '#fff',
+                            px: 2.5,
+                            py: 0.75,
+                            borderRadius: 2,
+                            fontSize: '0.75rem',
+                            fontWeight: 800,
+                            letterSpacing: '0.5px',
+                            boxShadow: '0 4px 12px -2px rgba(0,0,0,0.3)'
+                          }}>
+                            POPULAR
+                          </Box>
+                          <CardContent sx={{ p: 3.5 }}>
+                            <Typography variant="overline" sx={{ 
+                              fontWeight: 700,
+                              color: mode === 'dark' ? '#4ade80' : '#10b981',
+                              letterSpacing: '1px'
+                            }}>
+                              BEST VALUE
+                            </Typography>
+                            <Typography variant="h5" sx={{ fontWeight: 800, mb: 1, mt: 1 }}>
+                              Professional
+                            </Typography>
+                            <Typography variant="h3" sx={{ 
+                              fontWeight: 800, 
+                              mb: 1,
+                              background: mode === 'dark'
+                                ? 'linear-gradient(135deg, #4ade80, #60a5fa)'
+                                : 'linear-gradient(135deg, #10b981, #3b82f6)',
+                              WebkitBackgroundClip: 'text',
+                              WebkitTextFillColor: 'transparent'
+                            }}>
+                              $49
+                            </Typography>
+                            <Typography variant="body2" sx={{ 
+                              color: mode === 'dark' ? 'rgba(255,255,255,0.6)' : 'rgba(0,0,0,0.5)',
+                              mb: 3
+                            }}>
+                              per month
+                            </Typography>
+                            <Divider sx={{ 
+                              my: 3,
+                              borderColor: mode === 'dark'
+                                ? 'rgba(74,222,128,0.3)'
+                                : 'rgba(16,185,129,0.3)'
+                            }} />
+                            <Box sx={{ mb: 3 }}>
+                              <Typography variant="body2" sx={{ mb: 1.5, display: 'flex', alignItems: 'center', gap: 1 }}>
+                                <Box component="span" sx={{ color: mode === 'dark' ? '#4ade80' : '#10b981', fontWeight: 700 }}>✓</Box>
+                                Up to 50 machines
+                              </Typography>
+                              <Typography variant="body2" sx={{ mb: 1.5, display: 'flex', alignItems: 'center', gap: 1 }}>
+                                <Box component="span" sx={{ color: mode === 'dark' ? '#4ade80' : '#10b981', fontWeight: 700 }}>✓</Box>
+                                Advanced analytics
+                              </Typography>
+                              <Typography variant="body2" sx={{ mb: 1.5, display: 'flex', alignItems: 'center', gap: 1 }}>
+                                <Box component="span" sx={{ color: mode === 'dark' ? '#4ade80' : '#10b981', fontWeight: 700 }}>✓</Box>
+                                Priority support
+                              </Typography>
+                              <Typography variant="body2" sx={{ mb: 1.5, display: 'flex', alignItems: 'center', gap: 1 }}>
+                                <Box component="span" sx={{ color: mode === 'dark' ? '#4ade80' : '#10b981', fontWeight: 700 }}>✓</Box>
+                                90-day data retention
+                              </Typography>
+                              <Typography variant="body2" sx={{ mb: 1.5, display: 'flex', alignItems: 'center', gap: 1 }}>
+                                <Box component="span" sx={{ color: mode === 'dark' ? '#4ade80' : '#10b981', fontWeight: 700 }}>✓</Box>
+                                AI predictions
+                              </Typography>
+                            </Box>
+                            <Button
+                              fullWidth
+                              variant="contained"
+                              size="large"
+                              sx={{
+                                background: mode === 'dark'
+                                  ? 'linear-gradient(135deg, #4ade80, #60a5fa)'
+                                  : 'linear-gradient(135deg, #10b981, #3b82f6)',
+                                color: '#fff',
+                                fontWeight: 800,
+                                borderRadius: 2,
+                                py: 1.5,
+                                textTransform: 'none',
+                                fontSize: '1rem',
+                                boxShadow: mode === 'dark'
+                                  ? '0 8px 24px -6px rgba(74,222,128,0.5)'
+                                  : '0 8px 24px -6px rgba(16,185,129,0.4)',
+                                '&:hover': {
+                                  transform: 'translateY(-3px)',
+                                  boxShadow: mode === 'dark'
+                                    ? '0 12px 32px -6px rgba(74,222,128,0.6)'
+                                    : '0 12px 32px -6px rgba(16,185,129,0.5)'
+                                }
+                              }}
+                            >
+                              Upgrade
+                            </Button>
+                          </CardContent>
+                        </Card>
+                      </Grid>
+                      <Grid item xs={12} md={4}>
+                        <Card sx={{ 
+                          height: '100%',
+                          background: mode === 'dark'
+                            ? 'linear-gradient(135deg, rgba(30,41,59,0.7), rgba(51,65,85,0.7))'
+                            : 'linear-gradient(135deg, rgba(255,255,255,0.9), rgba(249,250,251,0.9))',
+                          border: mode === 'dark'
+                            ? '1.5px solid rgba(74,222,128,0.25)'
+                            : '1.5px solid rgba(16,185,129,0.25)',
+                          borderRadius: 3,
+                          boxShadow: mode === 'dark'
+                            ? '0 8px 24px -6px rgba(74,222,128,0.2)'
+                            : '0 8px 24px -6px rgba(16,185,129,0.15)',
+                          transition: 'all 0.3s ease',
+                          '&:hover': {
+                            transform: 'translateY(-6px)',
+                            boxShadow: mode === 'dark'
+                              ? '0 16px 40px -8px rgba(74,222,128,0.35)'
+                              : '0 16px 40px -8px rgba(16,185,129,0.3)',
+                            border: mode === 'dark'
+                              ? '1.5px solid rgba(74,222,128,0.4)'
+                              : '1.5px solid rgba(16,185,129,0.4)'
+                          }
+                        }}>
+                          <CardContent sx={{ p: 3.5 }}>
+                            <Typography variant="overline" sx={{ 
+                              fontWeight: 700,
+                              color: mode === 'dark' ? 'rgba(255,255,255,0.6)' : 'rgba(0,0,0,0.5)',
+                              letterSpacing: '1px'
+                            }}>
+                              ULTIMATE
+                            </Typography>
+                            <Typography variant="h5" sx={{ fontWeight: 800, mb: 1, mt: 1 }}>
+                              Enterprise
+                            </Typography>
+                            <Typography variant="h3" sx={{ 
+                              fontWeight: 800, 
+                              mb: 1,
+                              background: mode === 'dark'
+                                ? 'linear-gradient(135deg, #4ade80, #60a5fa)'
+                                : 'linear-gradient(135deg, #10b981, #3b82f6)',
+                              WebkitBackgroundClip: 'text',
+                              WebkitTextFillColor: 'transparent'
+                            }}>
+                              Custom
+                            </Typography>
+                            <Typography variant="body2" sx={{ 
+                              color: mode === 'dark' ? 'rgba(255,255,255,0.6)' : 'rgba(0,0,0,0.5)',
+                              mb: 3
+                            }}>
+                              tailored pricing
+                            </Typography>
+                            <Divider sx={{ 
+                              my: 3,
+                              borderColor: mode === 'dark'
+                                ? 'rgba(74,222,128,0.2)'
+                                : 'rgba(16,185,129,0.2)'
+                            }} />
+                            <Box sx={{ mb: 3 }}>
+                              <Typography variant="body2" sx={{ mb: 1.5, display: 'flex', alignItems: 'center', gap: 1 }}>
+                                <Box component="span" sx={{ color: mode === 'dark' ? '#4ade80' : '#10b981', fontWeight: 700 }}>✓</Box>
+                                Unlimited machines
+                              </Typography>
+                              <Typography variant="body2" sx={{ mb: 1.5, display: 'flex', alignItems: 'center', gap: 1 }}>
+                                <Box component="span" sx={{ color: mode === 'dark' ? '#4ade80' : '#10b981', fontWeight: 700 }}>✓</Box>
+                                Custom integrations
+                              </Typography>
+                              <Typography variant="body2" sx={{ mb: 1.5, display: 'flex', alignItems: 'center', gap: 1 }}>
+                                <Box component="span" sx={{ color: mode === 'dark' ? '#4ade80' : '#10b981', fontWeight: 700 }}>✓</Box>
+                                24/7 dedicated support
+                              </Typography>
+                              <Typography variant="body2" sx={{ mb: 1.5, display: 'flex', alignItems: 'center', gap: 1 }}>
+                                <Box component="span" sx={{ color: mode === 'dark' ? '#4ade80' : '#10b981', fontWeight: 700 }}>✓</Box>
+                                Unlimited data retention
+                              </Typography>
+                              <Typography variant="body2" sx={{ mb: 1.5, display: 'flex', alignItems: 'center', gap: 1 }}>
+                                <Box component="span" sx={{ color: mode === 'dark' ? '#4ade80' : '#10b981', fontWeight: 700 }}>✓</Box>
+                                White-label options
+                              </Typography>
+                            </Box>
+                            <Button
+                              fullWidth
+                              variant="outlined"
+                              size="large"
+                              sx={{
+                                borderColor: mode === 'dark' ? 'rgba(74,222,128,0.5)' : 'rgba(16,185,129,0.5)',
+                                color: mode === 'dark' ? '#4ade80' : '#10b981',
+                                fontWeight: 700,
+                                borderWidth: 1.5,
+                                borderRadius: 2,
+                                py: 1.25,
+                                textTransform: 'none',
+                                '&:hover': {
+                                  borderColor: mode === 'dark' ? '#4ade80' : '#10b981',
+                                  borderWidth: 1.5,
+                                  background: mode === 'dark'
+                                    ? 'rgba(74,222,128,0.1)'
+                                    : 'rgba(16,185,129,0.1)'
+                                }
+                              }}
+                            >
+                              Contact Sales
+                            </Button>
+                          </CardContent>
+                        </Card>
+                      </Grid>
+                    </Grid>
+                  </Box>
+                )}
+              </DialogContent>
+            </Dialog>
           </Box>
         </Toolbar>
       </AppBar>
