@@ -12,7 +12,6 @@ import {
   Chip,
   Stack,
   Tooltip as MuiTooltip,
-  Switch,
   CssBaseline,
   IconButton,
   Menu,
@@ -37,6 +36,7 @@ import NILMDashboard from './components/NILMDashboard';
 import PVDashboard from './components/PVDashboard';
 import OverviewDashboard from './components/OverviewDashboard';
 import ChatbotAssistant from './components/ChatbotAssistant';
+import LandingPage from './components/LandingPage';
 import './App.css';
 
 function DashboardContent() {
@@ -726,16 +726,18 @@ function App() {
       <AuthProvider>
         <DashboardProvider>
           <Routes>
+            <Route path="/" element={<LandingPage />} />
             <Route path="/login" element={<Login />} />
             <Route path="/signup" element={<Signup />} />
             <Route
-              path="/*"
+              path="/dashboard/*"
               element={
                 <PrivateRoute>
                   <DashboardContent />
                 </PrivateRoute>
               }
             />
+            <Route path="*" element={<Navigate to="/" replace />} />
           </Routes>
         </DashboardProvider>
       </AuthProvider>
