@@ -12,7 +12,7 @@ import {
   IconButton,
   CircularProgress
 } from '@mui/material';
-import { Visibility, VisibilityOff, PersonAdd } from '@mui/icons-material';
+import { Visibility, VisibilityOff, PersonAdd, ArrowBack } from '@mui/icons-material';
 import { useAuth } from '../context/AuthContext';
 
 const Signup = () => {
@@ -235,6 +235,30 @@ const Signup = () => {
           }
         }} />
       </Box>
+      
+      {/* Back Button */}
+      <IconButton
+        onClick={() => navigate('/')}
+        sx={{
+          position: 'absolute',
+          top: 24,
+          left: 24,
+          zIndex: 10,
+          background: 'rgba(255, 255, 255, 0.9)',
+          backdropFilter: 'blur(10px)',
+          border: '1px solid rgba(16,185,129,0.3)',
+          boxShadow: '0 4px 12px rgba(16,185,129,0.2)',
+          transition: 'all 0.3s ease',
+          '&:hover': {
+            background: 'rgba(16,185,129,0.1)',
+            transform: 'translateX(-4px)',
+            boxShadow: '0 6px 16px rgba(16,185,129,0.3)',
+            borderColor: 'rgba(16,185,129,0.5)'
+          }
+        }}
+      >
+        <ArrowBack sx={{ color: '#10b981' }} />
+      </IconButton>
       
       <Container maxWidth="sm" sx={{ position: 'relative', zIndex: 1 }}>
         <Paper
