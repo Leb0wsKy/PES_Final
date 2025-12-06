@@ -25,7 +25,8 @@ import {
   AccountCircle,
   Logout,
   LightMode,
-  DarkMode
+  DarkMode,
+  PrecisionManufacturing
 } from '@mui/icons-material';
 import { AuthProvider, useAuth } from './context/AuthContext';
 import { DashboardProvider } from './context/DashboardContext';
@@ -35,6 +36,7 @@ import PrivateRoute from './components/PrivateRoute';
 import NILMDashboard from './components/NILMDashboard';
 import PVDashboard from './components/PVDashboard';
 import OverviewDashboard from './components/OverviewDashboard';
+import MachinesDashboard from './components/MachinesDashboard';
 import ChatbotAssistant from './components/ChatbotAssistant';
 import LandingPage from './components/LandingPage';
 import './App.css';
@@ -547,6 +549,11 @@ function DashboardContent() {
                 iconPosition="start"
               />
               <Tab 
+                icon={<PrecisionManufacturing />} 
+                label="Machines" 
+                iconPosition="start"
+              />
+              <Tab 
                 icon={<ElectricBolt />} 
                 label="NILM" 
                 iconPosition="start"
@@ -682,8 +689,9 @@ function DashboardContent() {
         ) : (
           <>
             {selectedTab === 0 && <OverviewDashboard />}
-            {selectedTab === 1 && <NILMDashboard />}
-            {selectedTab === 2 && <PVDashboard />}
+            {selectedTab === 1 && <MachinesDashboard />}
+            {selectedTab === 2 && <NILMDashboard />}
+            {selectedTab === 3 && <PVDashboard />}
           </>
         )}
       </Container>
