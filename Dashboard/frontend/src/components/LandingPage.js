@@ -9,9 +9,7 @@ import {
   Card,
   CardContent,
   useTheme,
-  alpha,
-  Fade,
-  Grow
+  alpha
 } from '@mui/material';
 import {
   ChatBubbleOutline,
@@ -27,35 +25,45 @@ const FeatureCard = ({ icon: Icon, title, description, delay }) => {
   const theme = useTheme();
   
   return (
-    <Grow in={true} timeout={800} style={{ transformOrigin: '0 0 0' }} {...{ timeout: delay }}>
-      <Card
-        sx={{
-          height: '100%',
-          background: theme.palette.mode === 'dark'
-            ? `linear-gradient(135deg, ${alpha('#1e3a34', 0.5)} 0%, ${alpha('#0d2818', 0.3)} 100%)`
-            : `linear-gradient(135deg, ${alpha('#f0fdf4', 0.95)} 0%, ${alpha('#dcfce7', 0.8)} 100%)`,
-          backdropFilter: 'blur(20px)',
-          border: theme.palette.mode === 'dark'
-            ? `1px solid ${alpha('#6ee7b7', 0.25)}`
-            : `1px solid ${alpha('#86efac', 0.3)}`,
-          transition: 'all 0.4s cubic-bezier(0.4, 0, 0.2, 1)',
-          boxShadow: theme.palette.mode === 'dark'
-            ? `0 4px 20px ${alpha('#000', 0.5)}, inset 0 1px 0 ${alpha('#6ee7b7', 0.1)}`
-            : `0 4px 20px ${alpha('#10b981', 0.08)}, inset 0 1px 0 ${alpha('#fff', 0.9)}`,
-          '&:hover': {
-            transform: 'translateY(-8px)',
-            boxShadow: theme.palette.mode === 'dark'
-              ? `0 12px 48px ${alpha('#6ee7b7', 0.5)}, 0 0 80px ${alpha('#6ee7b7', 0.25)}, inset 0 1px 0 ${alpha('#6ee7b7', 0.2)}`
-              : `0 12px 40px ${alpha('#34d399', 0.3)}, 0 0 60px ${alpha('#6ee7b7', 0.2)}`,
-            border: theme.palette.mode === 'dark'
-              ? `1px solid ${alpha('#6ee7b7', 0.5)}`
-              : `1px solid ${alpha('#6ee7b7', 0.5)}`,
-            background: theme.palette.mode === 'dark'
-              ? `linear-gradient(135deg, ${alpha('#1e3a34', 0.7)} 0%, ${alpha('#0d2818', 0.5)} 100%)`
-              : `linear-gradient(135deg, ${alpha('#dcfce7', 1)} 0%, ${alpha('#bbf7d0', 0.9)} 100%)`,
+    <Card
+      sx={{
+        height: '100%',
+        background: theme.palette.mode === 'dark'
+          ? `linear-gradient(135deg, ${alpha('#1e3a34', 0.5)} 0%, ${alpha('#0d2818', 0.3)} 100%)`
+          : `linear-gradient(135deg, ${alpha('#f0fdf4', 0.95)} 0%, ${alpha('#dcfce7', 0.8)} 100%)`,
+        backdropFilter: 'blur(20px)',
+        border: theme.palette.mode === 'dark'
+          ? `1px solid ${alpha('#6ee7b7', 0.25)}`
+          : `1px solid ${alpha('#86efac', 0.3)}`,
+        transition: 'all 0.4s cubic-bezier(0.4, 0, 0.2, 1)',
+        boxShadow: theme.palette.mode === 'dark'
+          ? `0 4px 20px ${alpha('#000', 0.5)}, inset 0 1px 0 ${alpha('#6ee7b7', 0.1)}`
+          : `0 4px 20px ${alpha('#10b981', 0.08)}, inset 0 1px 0 ${alpha('#fff', 0.9)}`,
+        animation: `fadeInUp ${delay || 800}ms ease-out`,
+        '@keyframes fadeInUp': {
+          '0%': {
+            opacity: 0,
+            transform: 'translateY(30px)'
+          },
+          '100%': {
+            opacity: 1,
+            transform: 'translateY(0)'
           }
-        }}
-      >
+        },
+        '&:hover': {
+          transform: 'translateY(-8px)',
+          boxShadow: theme.palette.mode === 'dark'
+            ? `0 12px 48px ${alpha('#6ee7b7', 0.5)}, 0 0 80px ${alpha('#6ee7b7', 0.25)}, inset 0 1px 0 ${alpha('#6ee7b7', 0.2)}`
+            : `0 12px 40px ${alpha('#34d399', 0.3)}, 0 0 60px ${alpha('#6ee7b7', 0.2)}`,
+          border: theme.palette.mode === 'dark'
+            ? `1px solid ${alpha('#6ee7b7', 0.5)}`
+            : `1px solid ${alpha('#6ee7b7', 0.5)}`,
+          background: theme.palette.mode === 'dark'
+            ? `linear-gradient(135deg, ${alpha('#1e3a34', 0.7)} 0%, ${alpha('#0d2818', 0.5)} 100%)`
+            : `linear-gradient(135deg, ${alpha('#dcfce7', 1)} 0%, ${alpha('#bbf7d0', 0.9)} 100%)`,
+        }
+      }}
+    >
         <CardContent sx={{ p: 4 }}>
           <Box
             sx={{
@@ -119,7 +127,6 @@ const FeatureCard = ({ icon: Icon, title, description, delay }) => {
           </Typography>
         </CardContent>
       </Card>
-    </Grow>
   );
 };
 
@@ -287,6 +294,75 @@ const LandingPage = () => {
       />
 
       <Container maxWidth="lg" sx={{ position: 'relative', zIndex: 1 }}>
+        {/* Header with Login/Sign up buttons */}
+        <Box
+          sx={{
+            position: 'absolute',
+            top: 24,
+            right: 24,
+            display: 'flex',
+            gap: 2,
+            zIndex: 10
+          }}
+        >
+          <Button
+            onClick={() => navigate('/login')}
+            sx={{
+              px: 3,
+              py: 1.5,
+              fontSize: '1rem',
+              fontWeight: 700,
+              borderRadius: 2,
+              textTransform: 'none',
+              background: theme.palette.mode === 'dark'
+                ? 'linear-gradient(135deg, #4ade80 0%, #60a5fa 100%)'
+                : 'linear-gradient(135deg, #10b981 0%, #3b82f6 100%)',
+              color: '#fff',
+              boxShadow: theme.palette.mode === 'dark'
+                ? `0 8px 32px ${alpha('#4ade80', 0.5)}, 0 8px 32px ${alpha('#60a5fa', 0.3)}`
+                : `0 4px 20px ${alpha('#10b981', 0.4)}`,
+              border: 'none',
+              transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+              '&:hover': {
+                transform: 'translateY(-2px)',
+                boxShadow: theme.palette.mode === 'dark'
+                  ? `0 12px 48px ${alpha('#4ade80', 0.6)}, 0 12px 48px ${alpha('#60a5fa', 0.4)}`
+                  : `0 8px 32px ${alpha('#10b981', 0.5)}`,
+              }
+            }}
+          >
+            Login
+          </Button>
+          <Button
+            onClick={() => navigate('/signup')}
+            sx={{
+              px: 3,
+              py: 1.5,
+              fontSize: '1rem',
+              fontWeight: 700,
+              borderRadius: 2,
+              textTransform: 'none',
+              background: theme.palette.mode === 'dark'
+                ? 'linear-gradient(135deg, #4ade80 0%, #60a5fa 100%)'
+                : 'linear-gradient(135deg, #10b981 0%, #3b82f6 100%)',
+              color: '#fff',
+              boxShadow: theme.palette.mode === 'dark'
+                ? `0 8px 32px ${alpha('#4ade80', 0.5)}, 0 8px 32px ${alpha('#60a5fa', 0.3)}`
+                : `0 4px 20px ${alpha('#10b981', 0.4)}`,
+              border: 'none',
+              transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+              '&:hover': {
+                transform: 'translateY(-2px)',
+                boxShadow: theme.palette.mode === 'dark'
+                  ? `0 12px 48px ${alpha('#4ade80', 0.6)}, 0 12px 48px ${alpha('#60a5fa', 0.4)}`
+                  : `0 8px 32px ${alpha('#10b981', 0.5)}`,
+              }
+            }}
+          >
+            Sign up
+          </Button>
+        </Box>
+
         {/* Hero Section */}
         <Box
           sx={{
@@ -295,38 +371,42 @@ const LandingPage = () => {
             textAlign: 'center'
           }}
         >
-          <Fade in={true} timeout={1000}>
-            <Box sx={{ mb: 3 }}>
+          <Box sx={{ mb: 3, animation: 'fadeIn 1s ease-out' }}>
               <Box
                 sx={{
                   display: 'inline-flex',
                   alignItems: 'center',
-                  gap: 2,
+                  gap: 2.5,
                   mb: 3
                 }}
               >
-                <SolarPower
+                <Box
+                  component="img"
+                  src="/logo.png"
+                  alt="PowerPulse Logo"
                   sx={{
-                    fontSize: 48,
-                    color: theme.palette.mode === 'dark' ? '#6ee7b7' : '#10b981',
+                    width: 64,
+                    height: 64,
                     filter: theme.palette.mode === 'dark'
                       ? `drop-shadow(0 0 20px ${alpha('#6ee7b7', 0.9)}) drop-shadow(0 0 40px ${alpha('#6ee7b7', 0.6)})`
                       : `drop-shadow(0 4px 12px ${alpha('#10b981', 0.6)})`,
-                    animation: 'solarPulse 2s ease-in-out infinite'
+                    animation: 'logoPulse 2s ease-in-out infinite'
                   }}
                 />
                 <style>
                   {`
-                    @keyframes solarPulse {
+                    @keyframes logoPulse {
                       0%, 100% { 
                         filter: ${theme.palette.mode === 'dark'
                           ? `drop-shadow(0 0 20px ${alpha('#6ee7b7', 0.9)}) drop-shadow(0 0 40px ${alpha('#6ee7b7', 0.6)})`
                           : `drop-shadow(0 4px 12px ${alpha('#10b981', 0.6)})`};
+                        transform: scale(1);
                       }
                       50% { 
                         filter: ${theme.palette.mode === 'dark'
                           ? `drop-shadow(0 0 35px ${alpha('#6ee7b7', 1)}) drop-shadow(0 0 70px ${alpha('#6ee7b7', 0.8)})`
                           : `drop-shadow(0 4px 20px ${alpha('#10b981', 0.9)})`};
+                        transform: scale(1.05);
                       }
                     }
                   `}
@@ -334,36 +414,69 @@ const LandingPage = () => {
                 <Typography
                   variant="h3"
                   sx={{
-                    fontWeight: 800,
+                    fontWeight: 900,
+                    fontSize: { xs: '2.5rem', md: '3.5rem' },
+                    fontFamily: '"Inter", "Roboto", "Helvetica", "Arial", sans-serif',
+                    letterSpacing: '-0.02em',
                     background: theme.palette.mode === 'dark'
-                      ? 'linear-gradient(135deg, #4ade80 0%, #60a5fa 100%)'
-                      : 'linear-gradient(135deg, #10b981 0%, #3b82f6 100%)',
+                      ? 'linear-gradient(135deg, #4ade80 0%, #34d399 35%, #60a5fa 100%)'
+                      : 'linear-gradient(135deg, #059669 0%, #10b981 35%, #2563eb 100%)',
                     WebkitBackgroundClip: 'text',
                     WebkitTextFillColor: 'transparent',
                     backgroundClip: 'text',
-                    filter: theme.palette.mode === 'dark'
-                      ? `drop-shadow(0 0 30px ${alpha('#4ade80', 0.4)}) drop-shadow(0 0 30px ${alpha('#60a5fa', 0.3)})`
+                    textShadow: theme.palette.mode === 'dark'
+                      ? `0 0 80px ${alpha('#4ade80', 0.5)}, 0 0 40px ${alpha('#60a5fa', 0.4)}`
                       : 'none',
+                    position: 'relative',
+                    '&::before': theme.palette.mode === 'dark' ? {
+                      content: '"PowerPulse"',
+                      position: 'absolute',
+                      top: 0,
+                      left: 0,
+                      zIndex: -1,
+                      background: 'linear-gradient(135deg, #4ade80 0%, #60a5fa 100%)',
+                      WebkitBackgroundClip: 'text',
+                      WebkitTextFillColor: 'transparent',
+                      backgroundClip: 'text',
+                      filter: `blur(20px)`,
+                      opacity: 0.6,
+                    } : {}
                   }}
                 >
                   PowerPulse
                 </Typography>
               </Box>
             </Box>
-          </Fade>
 
-          <Fade in={true} timeout={1200}>
+          <Box sx={{ animation: 'fadeIn 1.2s ease-out' }}>
             <Typography
-              variant="h2"
+              variant="h1"
               sx={{
-                fontWeight: 800,
-                mb: 3,
-                fontSize: { xs: '2.5rem', md: '3.5rem' },
-                lineHeight: 1.2,
+                fontWeight: 900,
+                mb: 4,
+                fontSize: { xs: '2.75rem', md: '4.5rem', lg: '5rem' },
+                lineHeight: 1.15,
+                fontFamily: '"Inter", "Roboto", "Helvetica", "Arial", sans-serif',
+                letterSpacing: '-0.03em',
                 color: theme.palette.mode === 'dark' ? '#f8fafc' : '#0f172a',
                 textShadow: theme.palette.mode === 'dark'
-                  ? `0 2px 20px ${alpha('#000', 0.5)}`
-                  : 'none'
+                  ? `0 4px 30px ${alpha('#000', 0.6)}, 0 0 60px ${alpha('#4ade80', 0.2)}`
+                  : `0 2px 10px ${alpha('#000', 0.08)}`,
+                position: 'relative',
+                '&::before': theme.palette.mode === 'dark' ? {
+                  content: '"Monitor Your Factory\'s Energy"',
+                  position: 'absolute',
+                  top: 0,
+                  left: 0,
+                  right: 0,
+                  zIndex: -1,
+                  color: 'transparent',
+                  background: 'linear-gradient(135deg, #4ade80 0%, #60a5fa 100%)',
+                  WebkitBackgroundClip: 'text',
+                  backgroundClip: 'text',
+                  filter: 'blur(30px)',
+                  opacity: 0.4,
+                } : {}
               }}
             >
               Monitor Your Factory's Energy
@@ -372,33 +485,70 @@ const LandingPage = () => {
                 component="span"
                 sx={{
                   background: theme.palette.mode === 'dark'
-                    ? 'linear-gradient(135deg, #4ade80 0%, #60a5fa 100%)'
-                    : 'linear-gradient(135deg, #10b981 0%, #3b82f6 100%)',
+                    ? 'linear-gradient(135deg, #4ade80 0%, #34d399 25%, #22d3ee 50%, #60a5fa 100%)'
+                    : 'linear-gradient(135deg, #059669 0%, #10b981 25%, #0891b2 50%, #2563eb 100%)',
                   WebkitBackgroundClip: 'text',
                   WebkitTextFillColor: 'transparent',
                   backgroundClip: 'text',
-                  filter: theme.palette.mode === 'dark'
-                    ? `drop-shadow(0 0 30px ${alpha('#4ade80', 0.5)}) drop-shadow(0 0 30px ${alpha('#60a5fa', 0.4)})`
-                    : 'none',
+                  fontWeight: 950,
                   position: 'relative',
+                  display: 'inline-block',
+                  '&::before': theme.palette.mode === 'dark' ? {
+                    content: '"with Precision"',
+                    position: 'absolute',
+                    top: 0,
+                    left: 0,
+                    zIndex: -1,
+                    background: 'linear-gradient(135deg, #4ade80 0%, #60a5fa 100%)',
+                    WebkitBackgroundClip: 'text',
+                    WebkitTextFillColor: 'transparent',
+                    backgroundClip: 'text',
+                    filter: 'blur(25px)',
+                    opacity: 0.8,
+                  } : {},
                   '&::after': theme.palette.mode === 'dark' ? {
                     content: '""',
                     position: 'absolute',
-                    bottom: 0,
-                    left: 0,
-                    right: 0,
+                    bottom: -8,
+                    left: '10%',
+                    right: '10%',
+                    height: '4px',
+                    background: 'linear-gradient(90deg, transparent, #4ade80 20%, #22d3ee 50%, #60a5fa 80%, transparent)',
+                    boxShadow: `0 0 20px ${alpha('#4ade80', 0.8)}, 0 0 40px ${alpha('#60a5fa', 0.6)}`,
+                    borderRadius: '2px',
+                    animation: 'underlineGlow 2s ease-in-out infinite',
+                  } : {
+                    content: '""',
+                    position: 'absolute',
+                    bottom: -6,
+                    left: '10%',
+                    right: '10%',
                     height: '3px',
-                    background: 'linear-gradient(90deg, transparent, #4ade80 25%, #60a5fa 75%, transparent)',
-                    boxShadow: `0 0 15px ${alpha('#4ade80', 0.6)}, 0 0 15px ${alpha('#60a5fa', 0.6)}`,
-                  } : {}
+                    background: 'linear-gradient(90deg, transparent, #10b981 25%, #0891b2 50%, #2563eb 75%, transparent)',
+                    borderRadius: '2px',
+                  }
                 }}
               >
                 with Precision
               </Box>
             </Typography>
-          </Fade>
+            <style>
+              {`
+                @keyframes underlineGlow {
+                  0%, 100% { 
+                    opacity: 1;
+                    box-shadow: 0 0 20px ${alpha('#4ade80', 0.8)}, 0 0 40px ${alpha('#60a5fa', 0.6)};
+                  }
+                  50% { 
+                    opacity: 0.7;
+                    box-shadow: 0 0 30px ${alpha('#4ade80', 1)}, 0 0 60px ${alpha('#60a5fa', 0.8)};
+                  }
+                }
+              `}
+            </style>
+          </Box>
 
-          <Fade in={true} timeout={1400}>
+          <Box sx={{ animation: 'fadeIn 1.4s ease-out' }}>
             <Typography
               variant="h6"
               sx={{
@@ -414,9 +564,9 @@ const LandingPage = () => {
               PowerPulse helps you track energy consumption of factory machines and PV panels in
               real-time, with AI-powered insights and instant alerts.
             </Typography>
-          </Fade>
+          </Box>
 
-          <Fade in={true} timeout={1600}>
+          <Box sx={{ animation: 'fadeIn 1.6s ease-out' }}>
             <Button
               variant="contained"
               size="large"
@@ -465,8 +615,23 @@ const LandingPage = () => {
             >
               Get Started Today
             </Button>
-          </Fade>
+          </Box>
         </Box>
+
+        <style>
+          {`
+            @keyframes fadeIn {
+              from {
+                opacity: 0;
+                transform: translateY(20px);
+              }
+              to {
+                opacity: 1;
+                transform: translateY(0);
+              }
+            }
+          `}
+        </style>
 
         {/* Features Grid */}
         <Box sx={{ pb: 12 }}>

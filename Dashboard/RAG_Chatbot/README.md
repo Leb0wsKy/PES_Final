@@ -1,143 +1,145 @@
-# PowerPulse RAG Chatbot
+# RAG Chatbot Flask API
 
-AI-powered monitoring assistant for the PowerPulse Energy Dashboard using Retrieval-Augmented Generation (RAG).
+This Flask API bridges the frontend with the RAG chatbot implementation located in `../../RAG_Chatbot/`.
 
-## Features
+## Setup
 
-- **RAG Architecture**: Combines vector search with LLM for accurate, context-aware responses
-- **Knowledge Base**: Pre-loaded with NILM and PV system documentation
-- **Fallback Responses**: Works without OpenAI API using template-based responses
-- **Session Management**: Maintains conversation context
-- **Suggested Questions**: Helps users get started
+1. **Install Dependencies**:
+   ```bash
+   pip install -r requirements.txt
+   ```
 
-## Installation
+2. **Configure Environment**:
+   - The `.env` file is already configured with your Gemini API key
+   - Server runs on port 5003 by default
 
-1. Install dependencies:
-```bash
-pip install -r requirements.txt
-```
+3. **Run the Server**:
+   ```bash
+   python app.py
+   ```
 
-2. (Optional) Set OpenAI API key for enhanced responses:
-```bash
-# Windows PowerShell
-$env:OPENAI_API_KEY="your-api-key-here"
-
-# Linux/Mac
-export OPENAI_API_KEY="your-api-key-here"
-```
-
-## Running the Service
-
-```bash
-python app.py
-```
-
-The chatbot API will run on **http://localhost:5003**
+   The server will:
+   - Start on port 5003 (configurable in `.env`)
+   - Automatically load the RAG implementation from `../../RAG_Chatbot/`
+   - Build the index on startup using SIDED datasets (may take 1-2 minutes)
 
 ## API Endpoints
 
-### Health Check
-```
-GET /health
-```
+### POST /chat
+Send a chat message and get a response with relevant context.
 
-### Chat
-```
-POST /chat
-- **Dynamic Dataset Retrieval**: Builds embeddings from MongoDB collections (`nilmdatas`, `pvdatas`) for historical stats
-}
-```
-2. (Optional) Set API keys and MongoDB URI:
-
-### Clear Conversation
-```
-$env:GEMINI_API_KEY="your-gemini-key-here"
-$env:MONGODB_URI="mongodb://localhost:27017/pes_dashboard"
-POST /clear
-Content-Type: application/json
-
-export GEMINI_API_KEY="your-gemini-key-here"
-export MONGODB_URI="mongodb://localhost:27017/pes_dashboard"
+**Request:**
+```json
 {
-  "session_id": "user123"
+  "message": "What is the energy consumption in Dealer LA for December 2015?"
 }
 ```
 
-### Get Suggestions
-
-### Refresh Dataset Index
-```
-POST /refresh_dataset_index
-```
-Rebuilds the Mongo-derived embeddings/documents.
-```
-GET /suggest
-```
-1. **User Query**: User sends a message
-2. **Retrieval**: Searches static KB + dataset summaries (NILM/PV historical stats) from MongoDB
-3. **Augmentation**: Retrieved context + optional live data appended
-4. **Generation**: LLM (Gemini/OpenAI) or fallback templates produce answer
-5. **Response**: JSON returned to frontend
-3. **Augmentation**: Retrieved context is added to the prompt
-4. **Generation**: LLM (or fallback) generates a response
-5. **Response**: Answer is returned to user
-
-## Knowledge Base Topics
-
-- NILM System overview
-- PV Fault Detection
-- Model Performance
-- Fault Types
-- Energy Monitoring
-- System Metrics
-User Query
-   ↓
-Static KB Vector Store ─┐
-                 ├─ Merged Context → LLM / Fallback → Response
-Dataset Summary Store ───┘
-   ↑
-MongoDB (nilmdatas, pvdatas) → Periodic / on-demand indexing
-- Troubleshooting
-- Data Augmentation
-
-- Knowledge base can be extended in `KNOWLEDGE_BASE` array
-- Dataset index built automatically if `MONGODB_URI` reachable
-- Refresh dataset docs with `POST /refresh_dataset_index`
-
-```
-User Query
-    ↓
-Vector Store (Sentence Transformers)
-    ↓
-Top-K Documents Retrieved
-### Dataset Retrieval Configuration
-Set `MONGODB_URI` in `.env`:
-```
-MONGODB_URI=mongodb://localhost:27017/pes_dashboard
-DATASET_INDEX_LIMIT=300  # Optional override for how many recent docs to summarize
+**Response:**
+```json
+{
+  "response": "Based on the data...",
+  "context": [
+    {
+      "topic": "Dealer LA - December 2015",
+      "content": "Monthly summary: avg=123 kW...",
+      "score": 0.95,
+      "source": "Dealer_LA"
+    }
+  ],
+  "timestamp": "2025-12-06T..."
+}
 ```
 
-Rebuild index manually:
-```
-curl -X POST http://localhost:5003/refresh_dataset_index
+### GET /health
+Check if the server is running and RAG is initialized.
+
+**Response:**
+```json
+{
+  "status": "healthy",
+  "rag_initialized": true
+}
 ```
 
-If Mongo is unavailable the chatbot still functions using static docs + live data.
-    ↓
-LLM (OpenAI GPT-3.5) OR Template-based Fallback
-    ↓
-Generated Response
+### GET /status
+Get detailed status including number of documents loaded and chunks created.
+
+**Response:**
+```json
+{
+  "status": "ok",
+  "rag_initialized": true,
+  "num_documents": 9,
+  "num_chunks": 127,
+  "timestamp": "2025-12-06T..."
+}
 ```
 
-## Notes
+### POST /rebuild-index
+Rebuild the RAG index (admin endpoint). Use this if you update the SIDED datasets.
 
-- `POST /refresh_dataset_index` - Re-ingest Mongo dataset summaries
-- Works without OpenAI API using smart fallback responses
-- Embedding model downloads automatically on first run (~100MB)
-- Session history kept in memory (use database for production)
-### Dataset index size is 0
-- Check Mongo running and accessible via `MONGODB_URI`
-- Validate collections `nilmdatas`, `pvdatas` have documents
-- Rebuild index: `curl -X POST http://localhost:5003/refresh_dataset_index`
-- Ensure `pymongo` installed (in `requirements.txt`)
-- Knowledge base can be extended in `KNOWLEDGE_BASE` array
+## Architecture
+
+```
+Dashboard/RAG_Chatbot/app.py (Flask API - HTTP interface)
+     imports via sys.path
+../../RAG_Chatbot/main.py (RAG class - orchestration)
+     uses
+../../RAG_Chatbot/retreiver.py (Load 9 SIDED CSV files)
+../../RAG_Chatbot/chunker.py (Split documents into chunks)
+../../RAG_Chatbot/embedder.py (TF-IDF vectorization)
+../../RAG_Chatbot/llm_client.py (Gemini LLM wrapper)
+     processes
+../../SIDED/Dealer/*.csv, Logistic/*.csv, Office/*.csv
+```
+
+## How It Works
+
+1. **Startup**: Flask app imports RAG class from root folder using `sys.path` manipulation
+2. **Index Building**: RAG loads 9 CSV files from SIDED dataset (Dealer/Logistic/Office  LA/Offenbach/Tokyo)
+3. **Document Processing**: Creates monthly summaries with energy metrics (avg, min, max consumption)
+4. **Embedding**: Uses TF-IDF vectorizer from scikit-learn for semantic search
+5. **Query**: Frontend sends question  Flask retrieves relevant chunks  Gemini generates answer
+6. **Response**: Returns answer + context chunks with similarity scores
+
+## Troubleshooting
+
+**Import Errors**: Verify directory structure:
+```
+PES_Final/
+ Dashboard/
+    RAG_Chatbot/
+        app.py (this Flask API)
+        .env
+        requirements.txt
+ RAG_Chatbot/
+    main.py
+    retreiver.py
+    chunker.py
+    embedder.py
+    llm_client.py
+ SIDED/
+     Dealer/
+     Logistic/
+     Office/
+```
+
+**No SIDED datasets found Error**: 
+- Check that `../../SIDED/` exists relative to app.py
+- Verify CSV files exist: Dealer_LA.csv, Dealer_Offenbach.csv, etc.
+
+**IndexError or Empty Responses**: 
+- RAG index building failed
+- Check pandas is installed: `pip install pandas>=2.1.0`
+- Verify CSV files are readable and contain expected columns
+
+**Gemini API Errors**: 
+- Verify GEMINI_API_KEY in `.env`
+- Check Google Cloud quota and billing
+- Fallback to template responses if API unavailable
+
+**Frontend Connection Issues**:
+- Ensure Flask server is running on port 5003
+- Check CORS is enabled (already configured in app.py)
+- Frontend should connect to `http://localhost:5003/chat`

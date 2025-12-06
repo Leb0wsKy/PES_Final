@@ -13,8 +13,8 @@ start "PV API" cmd /k "cd flask_api_pv && python app.py"
 timeout /t 3 /nobreak >nul
 
 echo Starting RAG Chatbot API (Port 5003)...
-start "Chatbot API" cmd /k "set MONGODB_URI=mongodb://localhost:27017/pes_dashboard && cd RAG_Chatbot && python app.py"
-timeout /t 3 /nobreak >nul
+start "Chatbot API" cmd /k "cd RAG_Chatbot && python app.py"
+timeout /t 5 /nobreak >nul
 
 echo Starting Node.js Backend (Port 3001)...
 start "Backend" cmd /k "cd backend && npm start"
