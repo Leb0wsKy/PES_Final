@@ -1,5 +1,8 @@
 # PES Final Project - Energy Monitoring System
 
+cd .\Dashboard\
+.\start_all_with_chatbot.bat
+
 > **Last Updated**: November 28, 2025  
 > **Version**: 2.0 - RAG Chatbot Integration
 
