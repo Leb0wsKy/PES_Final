@@ -1436,7 +1436,7 @@ function DashboardContent() {
                               WebkitBackgroundClip: 'text',
                               WebkitTextFillColor: 'transparent'
                             }}>
-                              $0
+                              0 TND
                             </Typography>
                             <Typography variant="body2" sx={{ 
                               color: mode === 'dark' ? 'rgba(255,255,255,0.6)' : 'rgba(0,0,0,0.5)',
@@ -1557,7 +1557,7 @@ function DashboardContent() {
                               WebkitBackgroundClip: 'text',
                               WebkitTextFillColor: 'transparent'
                             }}>
-                              $49
+                              89 TND
                             </Typography>
                             <Typography variant="body2" sx={{ 
                               color: mode === 'dark' ? 'rgba(255,255,255,0.6)' : 'rgba(0,0,0,0.5)',
